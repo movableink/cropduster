@@ -1,0 +1,26 @@
+{
+  "name": "cropduster",
+  "version": "2.1.0",
+  "authors": [
+    "Michael Nutt <michael@movableink.com>",
+    "Albert Hwang <ahwang@movableink.com>"
+  ],
+  "description": "Common tools for building pages for use with Movable Ink",
+  "main": "lib/cropduster.js",
+  "moduleType": [
+    "es6"
+  ],
+  "keywords": [
+    "movableink",
+    "webcrop"
+  ],
+  "license": "MIT",
+  "homepage": "https://movableink.com",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
