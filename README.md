@@ -3,6 +3,11 @@
 Cropduster is a collection of tools for building pages to be web cropped by 
 Movable Ink.
 
+## Changelog
+
+### 2.3.0
+  * Guarantee correct ordering of callbacks in getImages()
+
 ## License
 
 Copyright &copy; 2015 Movable, Inc
