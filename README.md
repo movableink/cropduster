@@ -3,7 +3,22 @@
 Cropduster is a collection of tools for building pages to be web cropped by
 Movable Ink.
 
-## Usage
+## Installation
+
+Cropduster is on bower. Install it with:
+
+```bash
+npm install -g bower # if bower is not installed yet
+bower install --save cropduster
+```
+
+The use it by referencing it from your HTML page:
+
+```html
+<script src="bower_components/cropduster/lib/cropduster.js"></script>
+```
+
+## API
 
 ### Selecting elements
 
