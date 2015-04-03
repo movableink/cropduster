@@ -9,6 +9,7 @@ Cropduster is on bower. Install it with:
 
 ```bash
 npm install -g bower # if bower is not installed yet
+bower init
 bower install --save cropduster
 ```
 
@@ -58,6 +59,19 @@ CD.getCORS('http://example.com/page', function(data) {
 });
 ```
 
+Send POST and sending extra headers:
+
+```javascript
+CD.getCORS('http://example.com/page', {
+  method: 'POST',
+  body: '{"ok": "yes"}',
+  headers: {
+    'Accept': 'application/json'
+  }
+}, function(data) {
+  CD.$('h1')[0].innerHTML = data.h1;
+})
+
 ### Fetching images
 
 Images that are included in the source of the rendered page's HTML will always get loaded before the page is captured. However, images injected into the page with javascript will not always finish loading before the page is captured. To ensure the capture happens afterwards, use `CD.getImage`. It takes an image URL and calls a callback with a javascript `Image` that can be placed on the page.
@@ -83,7 +97,15 @@ CD.getImages(['http://example.com/1.png',
 });
 ```
 
+## Testing
+
+    bower install
+    open tests/index.html
+
 ## Changelog
+
+### Unreleased
+  * New options for CD.getCORS: `method` for changing HTTP method, `body` for sending request body when `POST` method is used, and `headers` object for sending extra request headers.
 
 ### 2.3.0
   * Guarantee correct ordering of callbacks in getImages()
