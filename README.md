@@ -104,7 +104,7 @@ CD.getImages(['http://example.com/1.png',
 
 ## Changelog
 
-### Unreleased
+### 2.4.0
   * New options for CD.getCORS: `method` for changing HTTP method, `body` for sending request body when `POST` method is used, and `headers` object for sending extra request headers.
 
 ### 2.3.0
