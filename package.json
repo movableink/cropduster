@@ -1,0 +1,37 @@
+{
+  "name": "cropduster",
+  "version": "2.4.0",
+  "description": "Library for building web pages for use with Movable Ink Web Crops",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "karma": "^0.12.31",
+    "karma-phantomjs-launcher": "^0.1.4",
+    "karma-qunit": "^0.1.4",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-sinon": "^1.0.4",
+    "qunitjs": "^1.18.0",
+    "sinon": "^1.14.1"
+  },
+  "scripts": {
+    "test": "node_modules/karma/bin/karma start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/movableink/cropduster.git"
+  },
+  "keywords": [
+    "movableink",
+    "webcrop",
+    "email"
+  ],
+  "author": "Michael Nutt <michael@movableink.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/movableink/cropduster/issues"
+  },
+  "homepage": "https://github.com/movableink/cropduster"
+}

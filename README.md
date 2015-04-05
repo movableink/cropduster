@@ -137,10 +137,17 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
     bower install
     open tests/index.html
 
+Alternatively, for command-line tests:
+
+    brew install phantomjs
+    npm install
+    npm test
+
 ## Changelog
 
 ### master
-  * Add `setImageRedirect`, `setClickthrough`, and `setExtraData`.
+  * Add `setImageRedirect`, `setClickthrough`, and `setExtraData`
+  * Set up TravisCI test suite
 
 ### 2.4.0
   * New options for CD.getCORS: `method` for changing HTTP method, `body` for sending request body when `POST` method is used, and `headers` object for sending extra request headers.
