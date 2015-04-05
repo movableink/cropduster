@@ -97,12 +97,50 @@ CD.getImages(['http://example.com/1.png',
 });
 ```
 
+### Redirecting to another image
+
+Sometimes, it is necessary to redirect to an image rather than rendering dynamic content. For example, a countdown timer may want to just show an image after the countdown has expired. It is certainly possible to just render the image inside the webpage and crop that, but a better solution is to use `CD.setImageRedirect` to issue
+a 302 redirect to the user to send them to the static content. If the function is called multiple times, the last image URL called is used.
+
+Example:
+
+```javascript
+CD.setImageRedirect('http://example.com/foo.png');
+console.log('user will be shown image located at http://example.com/foo.png');
+```
+
+### Storing extra analytics data
+
+It is possible to store extra data using the `CD.setExtraData` call. This data will be available in the `extra_data` field of the User-level Reports. Pass a javascript object, and it will be turned into JSON and stored in `extra_data`. Calling multiple times results in the objects being combined and any duplicate keys overwritten.
+
+Example:
+
+```javascript
+CD.setExtraData({userId: 5});
+CD.setExtraData({shownCategory: 'shoes'});
+console.log('extra_data field now contains {"userId":5,"shownCategory":"shoes"}');
+```
+
+### Setting custom per-user clickthrough URLs
+
+When showing dynamic content, it may be useful to be able to associate dynamic content with matching clickthroughs. Using `CD.setClickthrough`, you can save a clickthrough URL that users will visit when they click on the web crop. In order to work properly, the query params on both the embed code's image and link must match. If called multiple times, only the last called clickthrough URL will be used.
+
+Example:
+
+```javascript
+CD.setClickthrough('http://example.com');
+console.log('If user clicks on the web crop, they will go to http://example.com');
+```
+
 ## Testing
 
     bower install
     open tests/index.html
 
 ## Changelog
+
+### master
+  * Add `setImageRedirect`, `setClickthrough`, and `setExtraData`.
 
 ### 2.4.0
   * New options for CD.getCORS: `method` for changing HTTP method, `body` for sending request body when `POST` method is used, and `headers` object for sending extra request headers.

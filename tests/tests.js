@@ -20,6 +20,44 @@ test("CD.autofill", function() {
   equal(el.html(), 'bar', "auto-fills the query param into the element");
 });
 
+test("CD.setImageRedirect", function() {
+  CD.setImageRedirect("http://example.com/foo.png");
+
+  equal($("#mi-redirect-image").attr('href'), "http://example.com/foo.png",
+        "sets the image redirect");
+});
+
+test("CD.setImageRedirect multiple times", function() {
+  CD.setImageRedirect("http://example.com/foo.png");
+  CD.setImageRedirect("http://example.com/bar.png");
+
+  equal($("#mi-redirect-image").attr('href'), "http://example.com/bar.png",
+        "uses the last setImageRedirect url");
+});
+
+test("CD.setClickthrough", function() {
+  CD.setClickthrough("http://example.com/");
+
+  equal($("#mi_dynamic_link").attr('href'), "http://example.com/",
+        "sets the dynamic link");
+});
+
+test("CD.setExtraData with no existing data", function() {
+  CD.setExtraData({foo: 'bar'});
+
+  equal($("#mi-data").attr('data-mi-data'), '{"foo":"bar"}',
+        "sets the data in json");
+});
+
+test("CD.setExtraData with existing data", function() {
+  CD.setExtraData({foo: 'bar'});
+  CD.setExtraData({foo: 'baz'});
+  CD.setExtraData({my: 'data'});
+
+  equal($("#mi-data").attr('data-mi-data'), '{"foo":"baz","my":"data"}',
+        "sets the data in json");
+});
+
 test("CD.proxyUrl with http url", function() {
   var url = "http://google.com";
   equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com/", "returns CORS url");
@@ -85,7 +123,6 @@ QUnit.test("CD.getCors without options", function(assert) {
 
   xhr.restore();
 });
-
 
 QUnit.test("CD.getCors with POST", function(assert) {
   var xhr = sinon.useFakeXMLHttpRequest();
