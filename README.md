@@ -145,7 +145,7 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
-### master
+### 2.5.0
   * Add `setImageRedirect`, `setClickthrough`, and `setExtraData`
   * Set up TravisCI test suite
 
