@@ -3,6 +3,8 @@
 Cropduster is a collection of tools for building pages to be web cropped by
 Movable Ink.
 
+[![Build Status](https://travis-ci.org/movableink/cropduster.svg?branch=master)](https://travis-ci.org/movableink/cropduster)
+
 ## Installation
 
 Cropduster is on bower. Install it with:
