@@ -8,17 +8,18 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "bower": "^1.4.1",
     "karma": "^0.12.31",
+    "karma-chrome-launcher": "^0.1.7",
     "karma-phantomjs-launcher": "^0.1.4",
     "karma-qunit": "^0.1.4",
-    "karma-chrome-launcher": "^0.1.7",
     "karma-sinon": "^1.0.4",
     "qunitjs": "^1.18.0",
     "sinon": "^1.14.1"
   },
   "scripts": {
     "test": "node_modules/karma/bin/karma start",
-    "postinstall": "bower install"
+    "postinstall": "node_modules/bower/bin/bower install"
   },
   "repository": {
     "type": "git",
