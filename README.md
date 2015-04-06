@@ -163,7 +163,7 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
-### master
+### 2.6.0
   * Add `get` to fetch resources without using CORS
 
 ### 2.5.0
