@@ -1,5 +1,8 @@
 var container = $("<div style='position: absolute; left: -5000px;'></div>").appendTo('body');
 
+// Disable debugging output
+CD.log = function() {};
+
 test("CD.$", function() {
   equal(CD.$('body')[0], document.body, "finds elements" );
 });
