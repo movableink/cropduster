@@ -49,14 +49,15 @@ var fname = CD.param('fname');
 console.log(fname); // logs 'john'
 ```
 
-### Fetching third-party resources via CORS
+### Fetching third-party resources
 
-Movable Ink's capture engine traditionally captures the web page as soon as the page's `ready` event fires. This can cause issues when the user tries to fetch pages via ajax, as the capture engine does not wait for the ajax load to complete before rendering. In order to delay capture until the request has finished, use `CD.getCORS`. It temporarily suspends capture until the request completes.
+Movable Ink's capture engine traditionally captures the web page as soon as the page's `ready` event fires. This can cause issues when the user tries to fetch pages via ajax, as the capture engine does not wait for the ajax load to complete before rendering. In order to delay capture until the request has finished, use `CD.get`. It temporarily suspends capture until the request completes. Note: the URL has to
+be CORS-accessible, see `CD.getCORS` if it isn't. When in doubt, use `CD.getCORS`.
 
 Example:
 
 ```javascript
-CD.getCORS('http://example.com/page', function(data) {
+CD.get('http://cors-enabled-site.com/page', function(data) {
   CD.$('h1')[0].innerHTML = data.header;
 });
 ```
@@ -64,7 +65,7 @@ CD.getCORS('http://example.com/page', function(data) {
 Send POST and sending extra headers:
 
 ```javascript
-CD.getCORS('http://example.com/page', {
+CD.get('http://cors-enabled-site.com/page', {
   method: 'POST',
   body: '{"ok": "yes"}',
   headers: {
@@ -73,6 +74,21 @@ CD.getCORS('http://example.com/page', {
 }, function(data) {
   CD.$('h1')[0].innerHTML = data.h1;
 })
+
+### Fetching third-party resources with CORS
+
+Security restrictions prevent web pages from making cross-domain ajax requests. CORS
+is a workaround, but requires support from the website, and many websites do not
+support it. Instead, use `CD.getCORS` to use Movable Ink's CORS proxy to access the
+page.
+
+Example:
+
+```javascript
+CD.getCORS('http://example.com/page', function(data) {
+  CD.$('h1')[0].innerHTML = data.header;
+});
+```
 
 ### Fetching images
 
@@ -146,6 +162,9 @@ Alternatively, for command-line tests:
     npm test
 
 ## Changelog
+
+### master
+  * Add `get` to fetch resources without using CORS
 
 ### 2.5.0
   * Add `setImageRedirect`, `setClickthrough`, and `setExtraData`

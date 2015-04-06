@@ -106,6 +106,33 @@ QUnit.test("CD.getCors", function(assert) {
   xhr.restore();
 });
 
+QUnit.test("CD.get", function(assert) {
+  var xhr = sinon.useFakeXMLHttpRequest();
+  var requests = this.requests = [];
+  xhr.onCreate = function (xhr) {
+    requests.push(xhr);
+  };
+
+  var spy = sinon.spy();
+
+  CD.get("http://google.com", {
+    corsCacheTime: 5000,
+    headers: {
+      'Accept': 'application/json'
+    }
+  }, spy);
+
+  equal(requests.length, 1);
+  equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
+  equal(requests[0].requestHeaders['Accept'], 'application/json');
+  equal(requests[0].method, 'GET');
+  equal(requests[0].async, true);
+  equal(requests[0].url, "http://google.com");
+
+  xhr.restore();
+});
+
+
 QUnit.test("CD.getCors without options", function(assert) {
   var xhr = sinon.useFakeXMLHttpRequest();
   var requests = this.requests = [];
