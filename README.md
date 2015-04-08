@@ -74,6 +74,7 @@ CD.get('http://cors-enabled-site.com/page', {
 }, function(data) {
   CD.$('h1')[0].innerHTML = data.h1;
 })
+```
 
 ### Fetching third-party resources with CORS
 
