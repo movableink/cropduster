@@ -164,6 +164,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### master
+  * Do not pass cors ttl headers on regular `get` request.
+
 ### 2.6.0
   * Add `get` to fetch resources without using CORS
 

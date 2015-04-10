@@ -83,7 +83,7 @@ test("CD.capture", function() {
   equal(CD._readyToCapture, true, "sets readyToCapture");
 });
 
-QUnit.test("CD.getCors", function(assert) {
+QUnit.test("CD.getCORS", function(assert) {
   var xhr = sinon.useFakeXMLHttpRequest();
   var requests = this.requests = [];
   xhr.onCreate = function (xhr) {
@@ -126,7 +126,7 @@ QUnit.test("CD.get", function(assert) {
   }, spy);
 
   equal(requests.length, 1);
-  equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
+  equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], null); // not automatically added
   equal(requests[0].requestHeaders['Accept'], 'application/json');
   equal(requests[0].method, 'GET');
   equal(requests[0].async, true);
