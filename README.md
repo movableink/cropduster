@@ -164,7 +164,7 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
-### master
+### 2.7.0
   * Failing requests call the callback with `null`.
   * Do not pass cors ttl headers on regular `get` request.
 
