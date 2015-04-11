@@ -109,6 +109,45 @@ QUnit.test("CD.getCORS", function(assert) {
   xhr.restore();
 });
 
+QUnit.test("CD.get with response", function(assert) {
+  var server = sinon.fakeServer.create();
+
+  server.respondWith([200, {"Content-Type": "text/html"}, "response"]);
+
+  var spy = sinon.spy();
+
+  CD.get("http://google.com", {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }, spy);
+
+  server.respond();
+
+  ok(spy.calledWith('response'), 'calls the callback with a response');
+
+  server.restore();
+});
+
+QUnit.test("CD.get with a failing response", function(assert) {
+  var server = sinon.fakeServer.create();
+
+  var spy = sinon.spy();
+
+  CD.get("http://google.com", {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }, spy);
+
+  server.requests[0].abort();
+
+  ok(spy.calledWith(null), 'calls the callback with a response');
+
+  server.restore();
+});
+
+
 QUnit.test("CD.get", function(assert) {
   var xhr = sinon.useFakeXMLHttpRequest();
   var requests = this.requests = [];
