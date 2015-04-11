@@ -164,6 +164,10 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 2.7.1
+  * Remove window.onerror handler
+  * Ensure that failing requests actually call callback with `null`, rather than empty string
+
 ### 2.7.0
   * Failing requests call the callback with `null`.
   * Do not pass cors ttl headers on regular `get` request.
