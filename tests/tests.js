@@ -83,32 +83,6 @@ test("CD.capture", function() {
   equal(CD._readyToCapture, true, "sets readyToCapture");
 });
 
-QUnit.test("CD.getCORS", function(assert) {
-  var xhr = sinon.useFakeXMLHttpRequest();
-  var requests = this.requests = [];
-  xhr.onCreate = function (xhr) {
-    requests.push(xhr);
-  };
-
-  var spy = sinon.spy();
-
-  CD.getCORS("http://google.com", {
-    corsCacheTime: 5000,
-    headers: {
-      'Accept': 'application/json'
-    }
-  }, spy);
-
-  equal(requests.length, 1);
-  equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
-  equal(requests[0].requestHeaders['Accept'], 'application/json');
-  equal(requests[0].method, 'GET');
-  equal(requests[0].async, true);
-  equal(requests[0].url, "http://cors.movableink.com/google.com/");
-
-  xhr.restore();
-});
-
 QUnit.test("CD.get with response", function(assert) {
   var server = sinon.fakeServer.create();
 
@@ -174,8 +148,33 @@ QUnit.test("CD.get", function(assert) {
   xhr.restore();
 });
 
+QUnit.test("CD.getCORS", function(assert) {
+  var xhr = sinon.useFakeXMLHttpRequest();
+  var requests = this.requests = [];
+  xhr.onCreate = function (xhr) {
+    requests.push(xhr);
+  };
 
-QUnit.test("CD.getCors without options", function(assert) {
+  var spy = sinon.spy();
+
+  CD.getCORS("http://google.com", {
+    corsCacheTime: 5000,
+    headers: {
+      'Accept': 'application/json'
+    }
+  }, spy);
+
+  equal(requests.length, 1);
+  equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
+  equal(requests[0].requestHeaders['Accept'], 'application/json');
+  equal(requests[0].method, 'GET');
+  equal(requests[0].async, true);
+  equal(requests[0].url, "http://cors.movableink.com/google.com/");
+
+  xhr.restore();
+});
+
+QUnit.test("CD.getCORS without options", function(assert) {
   var xhr = sinon.useFakeXMLHttpRequest();
   var requests = this.requests = [];
   xhr.onCreate = function (xhr) {
@@ -193,7 +192,7 @@ QUnit.test("CD.getCors without options", function(assert) {
   xhr.restore();
 });
 
-QUnit.test("CD.getCors with POST", function(assert) {
+QUnit.test("CD.getCORS with POST", function(assert) {
   var xhr = sinon.useFakeXMLHttpRequest();
   var requests = this.requests = [];
   xhr.onCreate = function (xhr) {
