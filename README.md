@@ -164,6 +164,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### master
+  * Ensure that `CD.getImages` actually suspends crop
+
 ### 2.7.1
   * Remove window.onerror handler
   * Ensure that failing requests actually call callback with `null`, rather than empty string
