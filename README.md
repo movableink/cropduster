@@ -164,7 +164,7 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
-### master
+### 2.7.2
   * Ensure that `CD.getImages` actually suspends crop
 
 ### 2.7.1
