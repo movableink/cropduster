@@ -164,6 +164,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 2.7.3
+  * `CD.capture` forces a redraw on the page
+
 ### 2.7.2
   * Ensure that `CD.getImages` actually suspends crop
 
