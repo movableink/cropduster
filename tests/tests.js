@@ -3,17 +3,31 @@ var container = $("<div style='position: absolute; left: -5000px;'></div>").appe
 // Disable debugging output
 CD.log = function() {};
 
-test("CD.$", function() {
+var imageSuccessStub = function() {
+  var self = this;
+  setTimeout(function() {
+    self.onload();
+  }, 1);
+};
+
+var imageFailureStub = function() {
+  var self = this;
+  setTimeout(function() {
+    self.onerror();
+  }, 1);
+};
+
+QUnit.test("CD.$", function() {
   equal(CD.$('body')[0], document.body, "finds elements" );
 });
 
-test("CD.param when parameter not found", function() {
+QUnit.test("CD.param when parameter not found", function() {
   equal(CD.param('not_found'), null, "returns null");
 });
 
 // can't test CD.param returning query params from here, unfortunately...
 
-test("CD.autofill", function() {
+QUnit.test("CD.autofill", function() {
   container.html('');
   var el = $("<div id='autofill_foo'></div>");
   container.append(el);
@@ -23,14 +37,14 @@ test("CD.autofill", function() {
   equal(el.html(), 'bar', "auto-fills the query param into the element");
 });
 
-test("CD.setImageRedirect", function() {
+QUnit.test("CD.setImageRedirect", function() {
   CD.setImageRedirect("http://example.com/foo.png");
 
   equal($("#mi-redirect-image").attr('href'), "http://example.com/foo.png",
         "sets the image redirect");
 });
 
-test("CD.setImageRedirect multiple times", function() {
+QUnit.test("CD.setImageRedirect multiple times", function() {
   CD.setImageRedirect("http://example.com/foo.png");
   CD.setImageRedirect("http://example.com/bar.png");
 
@@ -38,21 +52,21 @@ test("CD.setImageRedirect multiple times", function() {
         "uses the last setImageRedirect url");
 });
 
-test("CD.setClickthrough", function() {
+QUnit.test("CD.setClickthrough", function() {
   CD.setClickthrough("http://example.com/");
 
   equal($("#mi_dynamic_link").attr('href'), "http://example.com/",
         "sets the dynamic link");
 });
 
-test("CD.setExtraData with no existing data", function() {
+QUnit.test("CD.setExtraData with no existing data", function() {
   CD.setExtraData({foo: 'bar'});
 
   equal($("#mi-data").attr('data-mi-data'), '{"foo":"bar"}',
         "sets the data in json");
 });
 
-test("CD.setExtraData with existing data", function() {
+QUnit.test("CD.setExtraData with existing data", function() {
   CD.setExtraData({foo: 'bar'});
   CD.setExtraData({foo: 'baz'});
   CD.setExtraData({my: 'data'});
@@ -61,26 +75,90 @@ test("CD.setExtraData with existing data", function() {
         "sets the data in json");
 });
 
-test("CD.proxyUrl with http url", function() {
+QUnit.test("CD.proxyUrl with http url", function() {
   var url = "http://google.com";
   equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com/", "returns CORS url");
 });
 
-test("CD.proxyUrl with https url", function() {
+QUnit.test("CD.proxyUrl with https url", function() {
   var url = "https://google.com";
   equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com:443/", "returns CORS url");
 });
 
-test("CD.suspend", function() {
+QUnit.test("CD.suspend", function() {
   CD.capture(); // clean out previous test
   CD.suspend();
   equal(CD._readyToCapture, false, "sets readyToCapture");
 });
 
-test("CD.capture", function() {
+QUnit.test("CD.capture", function() {
   CD.suspend(); // clean out previous test
   CD.capture();
   equal(CD._readyToCapture, true, "sets readyToCapture");
+});
+
+QUnit.test("CD.getImage load success", function(assert) {
+  var done = assert.async();
+  window.Image = imageSuccessStub;
+  var src = "http://example.com/foo.png";
+  CD.getImage(src, function(img) {
+    equal(img.src, src, "called with src");
+    done();
+  });
+});
+
+QUnit.test("CD.getImage load failure", function(assert) {
+  var done = assert.async();
+  window.Image = imageFailureStub;
+  var src = "http://example.com/foo.png";
+  CD.getImage(src, function(img) {
+    equal(img, null, "called with null");
+    done();
+  });
+});
+
+QUnit.test("CD.getImages without callback", function(assert) {
+  expect(0);
+  window.Image = imageSuccessStub;
+  var srcA = "http://example.com/foo.png";
+  var srcB = "http://example.com/bar.png";
+  CD.getImages([srcA, srcB]);
+});
+
+QUnit.test("CD.getImages with callback", function(assert) {
+  var done = assert.async();
+  window.Image = imageSuccessStub;
+  var srcA = "http://example.com/foo.png";
+  var srcB = "http://example.com/bar.png";
+  var cb = sinon.spy();
+  CD.getImages([srcA, srcB], cb);
+
+  setTimeout(function() {
+    ok(cb.calledOnce);
+    equal(cb.firstCall.args[0].length, 2);
+    done();
+  }, 10);
+});
+
+QUnit.test("CD.getImages with callback and single image callback", function(assert) {
+  var done = assert.async();
+  window.Image = imageSuccessStub;
+  var srcA = "http://example.com/foo.png";
+  var srcB = "http://example.com/bar.png";
+  var cb = sinon.spy();
+  var singleCb = sinon.spy();
+  CD.getImages([srcA, srcB], cb, singleCb);
+
+  setTimeout(function() {
+    ok(cb.calledOnce, "callback is called only once");
+    equal(cb.firstCall.args[0].length, 2, "called with both images");
+
+    ok(singleCb.calledTwice, "single image callback is called for each image");
+    equal(singleCb.firstCall.args[0].src, srcA, "first image called first");
+    equal(singleCb.secondCall.args[0].src, srcB, "last image called last");
+
+    done();
+  }, 10);
 });
 
 QUnit.test("CD.get with response", function(assert) {
