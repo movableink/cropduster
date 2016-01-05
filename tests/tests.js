@@ -85,14 +85,14 @@ QUnit.test("CD.proxyUrl with https url", function() {
   equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com:443/", "returns CORS url");
 });
 
-QUnit.test("CD.suspend", function() {
-  CD.capture(); // clean out previous test
+test("CD.suspend", function() {
+  CD._reset(); // clean out previous test
   CD.suspend();
   equal(CD._readyToCapture, false, "sets readyToCapture");
 });
 
-QUnit.test("CD.capture", function() {
-  CD.suspend(); // clean out previous test
+test("CD.capture", function() {
+  CD._reset(); // clean out previous test
   CD.capture();
   equal(CD._readyToCapture, true, "sets readyToCapture");
 });
@@ -297,4 +297,21 @@ QUnit.test("CD.getCORS with POST", function(assert) {
   equal(requests[0].url, "http://cors.movableink.com/google.com/");
 
   xhr.restore();
+});
+
+QUnit.test("concurrent calls", function(assert) {
+  CD._reset();
+
+  CD.suspend(1000); // 1 open call
+  CD.suspend(500); // 2 open calls
+  CD.capture(); // 1 open call
+  CD.suspend(1000); // 2 open calls
+
+  CD.capture(); // 1 open call
+  equal(CD._readyToCapture, false, "waits for open calls to get to zero");
+  equal(CD._openCalls, 1, "one open call");
+
+  CD.capture(); // 0 open calls
+  equal(CD._readyToCapture, true, "sets readyToCapture");
+  equal(CD._openCalls, 0, "zero open calls");
 });
