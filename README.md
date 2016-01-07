@@ -105,15 +105,20 @@ CD.getImage('http://example.com/image.png', function(img) {
 
 ### Fetching multiple images
 
-It is not possible to make many `CD.getImage` calls concurrently, because the first one that returns will trigger a page capture. Instead, use `CD.getImages`. It receives an array of URLs and calls a callback with a javascript `Image` object for each of the loaded images. The callbacks are guaranteed to fire in the same order as the list of image URLs.
+As of 3.0.0, it is possible many `CD.getImage` calls concurrently. If, instead if you know all the images needed, you may use `CD.getImages`. It receives an array of URLs and calls two separate types of callbacks. The first is called once when all images are done loading with the array of javascript `Image` objects. The second type of callback is with a javascript `Image` object for each of the loaded images. These callbacks are guaranteed to fire in the same order as the list of image URLs.
 
 Example:
 
 ```javascript
-CD.getImages(['http://example.com/1.png',
-              'http://example.com/2.png'], function(img) {
-  CD.$('div.images')[0].appendChild(img);
-});
+CD.getImages(['http://example.com/1.png', 'http://example.com/2.png'],
+  function(images) {
+    console.log(images[0].height);
+  },
+  function(img) {
+    console.log('this one');
+    CD.$('body')[0].appendChild(img);
+  }
+);
 ```
 
 ### Redirecting to another image
@@ -163,6 +168,10 @@ Alternatively, for command-line tests:
     npm test
 
 ## Changelog
+
+### 3.0.0
+  * No more reference counting or maxSuspensions
+  * `CD.getImages()` accepts two callbacks, one for when all images resolve and once for after each image resolves
 
 ### 2.7.3
   * `CD.capture` forces a redraw on the page
