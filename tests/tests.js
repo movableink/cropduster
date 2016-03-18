@@ -244,6 +244,7 @@ QUnit.test("CD.getCORS", function(assert) {
 
   equal(requests.length, 1);
   equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
+  equal(requests[0].requestHeaders['x-mi-cbe'], '-2134781906');
   equal(requests[0].requestHeaders['Accept'], 'application/json');
   equal(requests[0].method, 'GET');
   equal(requests[0].async, true);
@@ -265,6 +266,7 @@ QUnit.test("CD.getCORS without options", function(assert) {
 
   equal(requests.length, 1);
   equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 10);
+  equal(requests[0].requestHeaders['x-mi-cbe'], '2084411041');
   equal(requests[0].url, "http://cors.movableink.com/google.com/");
 
   xhr.restore();
@@ -291,6 +293,7 @@ QUnit.test("CD.getCORS with POST", function(assert) {
   equal(requests.length, 1);
   equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
   equal(requests[0].requestHeaders['Accept'], 'application/json');
+  equal(requests[0].requestHeaders['x-mi-cbe'], '-1217831332');
   equal(requests[0].method, 'POST');
   equal(requests[0].async, true);
   equal(requests[0].requestBody, 'foobar');
@@ -314,4 +317,16 @@ QUnit.test("concurrent calls", function(assert) {
   CD.capture(); // 0 open calls
   equal(CD._readyToCapture, true, "sets readyToCapture");
   equal(CD._openCalls, 0, "zero open calls");
+});
+
+
+QUnit.test("_hashForRequest", function(assert) {
+  var hash = CD._hashForRequest("http://www.google.com", {"foo": "bar"});
+  equal(hash, "387990350");
+  hash = CD._hashForRequest("http://www.google.com", {"foo": "bar"});
+  equal(hash, "387990350");
+  var different = CD._hashForRequest("http://www.google.com", {"foo": "baz"});
+  equal(different, "387998038");
+  var another = CD._hashForRequest("http://www.example.com", {"foo": "baz"});
+  equal(another, "-164085129");
 });
