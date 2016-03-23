@@ -85,6 +85,11 @@ QUnit.test("CD.proxyUrl with https url", function() {
   equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com:443/", "returns CORS url");
 });
 
+QUnit.test("CD.proxyUrl with port", function() {
+  var url = "http://google.com:8080";
+  equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com:8080/", "returns CORS url");
+});
+
 test("CD.suspend", function() {
   CD._reset(); // clean out previous test
   CD.suspend();
