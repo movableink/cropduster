@@ -184,6 +184,12 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 3.1.1
+  * Support for `CD.getCORS()` with non-standard ports
+
+### 3.1.0
+  * `CD.getCORS()` sends `x-mi-cbe` request header to ensure requests consistently go to the same backend
+
 ### 3.0.0
   * No more reference counting or maxSuspensions
   * `CD.getImages()` accepts two callbacks, one for when all images resolve and once for after each image resolves
