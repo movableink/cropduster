@@ -51,8 +51,10 @@ console.log(fname); // logs 'john'
 
 ### Fetching third-party resources
 
-Movable Ink's capture engine traditionally captures the web page as soon as the page's `ready` event fires. This can cause issues when the user tries to fetch pages via ajax, as the capture engine does not wait for the ajax load to complete before rendering. In order to delay capture until the request has finished, use `CD.get`. It temporarily suspends capture until the request completes. Note: the URL has to
-be CORS-accessible, see `CD.getCORS` if it isn't. When in doubt, use `CD.getCORS`.
+Movable Ink's capture engine traditionally captures the web page as soon as the page's `ready` event fires. This can cause
+issues when the user tries to fetch pages via ajax, as the capture engine does not wait for the ajax load to complete
+before rendering. In order to delay capture until the request has finished, use `CD.get`. It temporarily suspends capture
+until the request completes. Note: the URL has to be CORS-accessible, see `CD.getCORS` if it isn't. When in doubt, use `CD.getCORS`.
 
 Example:
 
@@ -93,7 +95,10 @@ CD.getCORS('http://example.com/page', function(data) {
 
 ### Fetching images
 
-Images that are included in the source of the rendered page's HTML will always get loaded before the page is captured. However, images injected into the page with javascript will not always finish loading before the page is captured. To ensure the capture happens afterwards, use `CD.getImage`. It takes an image URL and calls a callback with a javascript `Image` that can be placed on the page.
+Images that are included in the source of the rendered page's HTML will always get loaded before the page is captured. However,
+images injected into the page with javascript will not always finish loading before the page is captured. To ensure the capture
+happens afterwards, use `CD.getImage`. It takes an image URL and calls a callback with a javascript `Image` that can be placed
+on the page.
 
 Example:
 
@@ -105,7 +110,10 @@ CD.getImage('http://example.com/image.png', function(img) {
 
 ### Fetching multiple images
 
-As of 3.0.0, it is possible many `CD.getImage` calls concurrently. If, instead if you know all the images needed, you may use `CD.getImages`. It receives an array of URLs and calls two separate types of callbacks. The first is called once when all images are done loading with the array of javascript `Image` objects. The second type of callback is with a javascript `Image` object for each of the loaded images. These callbacks are guaranteed to fire in the same order as the list of image URLs.
+As of 3.0.0, it is possible many `CD.getImage` calls concurrently. If, instead if you know all the images needed, you may use
+`CD.getImages`. It receives an array of URLs and calls two separate types of callbacks. The first is called once when all images
+are done loading with the array of javascript `Image` objects. The second type of callback is with a javascript `Image` object
+for each of the loaded images. These callbacks are guaranteed to fire in the same order as the list of image URLs.
 
 Example:
 
@@ -123,8 +131,10 @@ CD.getImages(['http://example.com/1.png', 'http://example.com/2.png'],
 
 ### Redirecting to another image
 
-Sometimes, it is necessary to redirect to an image rather than rendering dynamic content. For example, a countdown timer may want to just show an image after the countdown has expired. It is certainly possible to just render the image inside the webpage and crop that, but a better solution is to use `CD.setImageRedirect` to issue
-a 302 redirect to the user to send them to the static content. If the function is called multiple times, the last image URL called is used.
+Sometimes, it is necessary to redirect to an image rather than rendering dynamic content. For example, a countdown timer may
+want to just show an image after the countdown has expired. It is certainly possible to just render the image inside the
+webpage and crop that, but a better solution is to use `CD.setImageRedirect` to issue a 302 redirect to the user to send them
+to the static content. If the function is called multiple times, the last image URL called is used.
 
 Example:
 
@@ -135,7 +145,9 @@ console.log('user will be shown image located at http://example.com/foo.png');
 
 ### Storing extra analytics data
 
-It is possible to store extra data using the `CD.setExtraData` call. This data will be available in the `extra_data` field of the User-level Reports. Pass a javascript object, and it will be turned into JSON and stored in `extra_data`. Calling multiple times results in the objects being combined and any duplicate keys overwritten.
+It is possible to store extra data using the `CD.setExtraData` call. This data will be available in the `extra_data` field of
+the User-level Reports. Pass a javascript object, and it will be turned into JSON and stored in `extra_data`. Calling multiple
+times results in the objects being combined and any duplicate keys overwritten.
 
 Example:
 
@@ -147,7 +159,10 @@ console.log('extra_data field now contains {"userId":5,"shownCategory":"shoes"}'
 
 ### Setting custom per-user clickthrough URLs
 
-When showing dynamic content, it may be useful to be able to associate dynamic content with matching clickthroughs. Using `CD.setClickthrough`, you can save a clickthrough URL that users will visit when they click on the web crop. In order to work properly, the query params on both the embed code's image and link must match. If called multiple times, only the last called clickthrough URL will be used.
+When showing dynamic content, it may be useful to be able to associate dynamic content with matching clickthroughs. Using
+`CD.setClickthrough`, you can save a clickthrough URL that users will visit when they click on the web crop. In order to work
+properly, the query params on both the embed code's image and link must match. If called multiple times, only the last called
+clickthrough URL will be used.
 
 Example:
 
@@ -195,7 +210,8 @@ Alternatively, for command-line tests:
   * Set up TravisCI test suite
 
 ### 2.4.0
-  * New options for CD.getCORS: `method` for changing HTTP method, `body` for sending request body when `POST` method is used, and `headers` object for sending extra request headers.
+  * New options for CD.getCORS: `method` for changing HTTP method, `body` for sending request body when `POST` method is used,
+    and `headers` object for sending extra request headers.
 
 ### 2.3.0
   * Guarantee correct ordering of callbacks in getImages()
