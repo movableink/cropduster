@@ -335,3 +335,17 @@ QUnit.test("_hashForRequest", function(assert) {
   var another = CD._hashForRequest("http://www.example.com", {"foo": "baz"});
   equal(another, "-164085129");
 });
+
+QUnit.test("CD.cancelRequest", function(assert) {
+  var callback = sinon.spy();
+  window.MICapture = { cancel: callback };
+  CD.cancelRequest();
+  ok(callback.calledOnce);
+});
+
+QUnit.test("CD.throwError", function(assert) {
+  var callback = sinon.spy();
+  window.MICapture = { error: callback };
+  CD.throwError();
+  ok(callback.calledOnce);
+});
