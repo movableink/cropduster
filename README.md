@@ -184,6 +184,11 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 3.2.0
+  * Support `CD.cancel()` for when crop wants to show fallback but not trigger error condition
+  * Support `CD.throwError()` for when crop fails (such as XHR failure) and trigger error
+  * `CD.begin(msg)` and `CD.end(msg)` support an argument that will be logged for easier debugging
+
 ### 3.1.1
   * Support for `CD.getCORS()` with non-standard ports
 
