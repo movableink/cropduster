@@ -59,7 +59,7 @@ until the request completes. Note: the URL has to be CORS-accessible, see `CD.ge
 Example:
 
 ```javascript
-CD.get('http://cors-enabled-site.com/page', function(data) {
+CD.get('http://cors-enabled-site.com/page', function(data, status) {
   CD.$('h1')[0].innerHTML = data.header;
 });
 ```
@@ -73,7 +73,7 @@ CD.get('http://cors-enabled-site.com/page', {
   headers: {
     'Accept': 'application/json'
   }
-}, function(data) {
+}, function(data, status) {
   CD.$('h1')[0].innerHTML = data.h1;
 })
 ```
@@ -88,7 +88,7 @@ page.
 Example:
 
 ```javascript
-CD.getCORS('http://example.com/page', function(data) {
+CD.getCORS('http://example.com/page', function(data, status) {
   CD.$('h1')[0].innerHTML = data.header;
 });
 ```
@@ -183,6 +183,9 @@ Alternatively, for command-line tests:
     npm test
 
 ## Changelog
+
+### 3.2.1
+  * `CD.get()` and `CD.getCORS()` return the (integer) http status as the second argument of their callbacks. This is currently completely backwards-compatible, but we would like to make backwards-incompatible changes to this API in the future.
 
 ### 3.2.0
   * Support `CD.cancel()` for when crop wants to show fallback but not trigger error condition
