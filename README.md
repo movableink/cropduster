@@ -184,6 +184,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 3.2.2
+  * Ensure that `CD.suspend(msg)` always logs the `msg` string
+
 ### 3.2.1
   * `CD.get()` and `CD.getCORS()` return the (integer) http status as the second argument of their callbacks. This is currently completely backwards-compatible, but we would like to make backwards-incompatible changes to this API in the future.
 
