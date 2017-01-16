@@ -184,6 +184,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 3.2.3
+  * fix bower/npm version numbers
+
 ### 3.2.2
   * Ensure that `CD.suspend(msg)` always logs the `msg` string
 
