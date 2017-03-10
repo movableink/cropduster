@@ -80,8 +80,8 @@ QUnit.test("CD.setExtraData with existing data", function() {
         "sets the data in json");
 });
 
-QUnit.test("CD.recordBehavioralSta", function(assert) {
-  CD.recordBehavioralStat(1, "foo");
+QUnit.test("CD.recordStat", function(assert) {
+  CD.recordStat("behavioral", 1, "foo");
 
   assert.contains($("#mi-data").attr('data-mi-data'), '\"counter_name\":\"behavioral\",\"content_key\":\"1-foo\"',
         "sets the data in json");
