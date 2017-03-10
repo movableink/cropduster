@@ -171,6 +171,15 @@ CD.setClickthrough('http://example.com');
 console.log('If user clicks on the web crop, they will go to http://example.com');
 ```
 
+### Recording Stats
+Record stats to a specific counter, with a key that is the concatenated value of the "id" and the "endpoint"
+
+Example:
+```javascript
+CD.recordStat("behavioral", 1, "endpoint");
+console.log('Will send extraData containing: {"counter_name":"behavioral","content_key":"1-endpoint"}');
+```
+
 ## Testing
 
     bower install

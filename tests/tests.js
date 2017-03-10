@@ -17,6 +17,11 @@ var imageFailureStub = function() {
   }, 1);
 };
 
+QUnit.assert.contains = function(full, part, message ) {
+  var actual = full.indexOf(part) > -1;
+  this.push(actual, actual, part, message);
+};
+
 QUnit.test("CD.$", function() {
   equal(CD.$('body')[0], document.body, "finds elements" );
 });
@@ -72,6 +77,13 @@ QUnit.test("CD.setExtraData with existing data", function() {
   CD.setExtraData({my: 'data'});
 
   equal($("#mi-data").attr('data-mi-data'), '{"foo":"baz","my":"data"}',
+        "sets the data in json");
+});
+
+QUnit.test("CD.recordStat", function(assert) {
+  CD.recordStat("behavioral", 1, "foo");
+
+  assert.contains($("#mi-data").attr('data-mi-data'), '\"counter_name\":\"behavioral\",\"content_key\":\"1-foo\"',
         "sets the data in json");
 });
 
