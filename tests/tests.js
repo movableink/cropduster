@@ -277,6 +277,25 @@ QUnit.test("CD.getCORS without options", function(assert) {
   xhr.restore();
 });
 
+QUnit.test("CD.getProfile", function(assert) {
+  var xhr = sinon.useFakeXMLHttpRequest();
+  var requests = this.requests = [];
+  xhr.onCreate = function (xhr) {
+    requests.push(xhr);
+  };
+
+  var spy = sinon.spy();
+  var profiles = CD.getProfile("6225", "mierictest", "cart_abandon", spy);
+
+  this.requests[0].respond(200, { "Content-Type": "application/json" },
+    '[{ "product_url": "www.product.com", "event_type": "cart_add" }, { "product_url": "www.product.com", "event_type": "conversion" }, { "product_url": "www.product2.com", "event_type": "cart_add" }]');
+
+  equal(requests[0].url, "http://cors.movableink.com/profile.movableink.com:8081/company/6225/profile/mierictest");
+  sinon.assert.calledWith(spy, ["www.product2.com"]);
+
+  xhr.restore();
+});
+
 QUnit.test("CD.getCORS with POST", function(assert) {
   var xhr = sinon.useFakeXMLHttpRequest();
   var requests = this.requests = [];
