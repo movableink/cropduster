@@ -145,6 +145,10 @@ QUnit.test("CD.getImages with callback", function(assert) {
   }, 10);
 });
 
+QUnit.test("CD.waitForAsset", function(assert) {
+  equal(CD.waitForAsset('http://example.com/foo.png'), undefined);
+});
+
 QUnit.test("CD.getImages with callback and single image callback", function(assert) {
   var done = assert.async();
   window.Image = imageSuccessStub;
