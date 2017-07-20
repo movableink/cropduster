@@ -161,6 +161,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 3.3.0
+  * Add `CD.waitForAsset()` call, to be used instead of `CD.getImage()` / `CD.getImages()` going forward
+
 ### 3.2.3
   * fix bower/npm version numbers
 
