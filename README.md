@@ -171,8 +171,8 @@ Alternatively, for command-line tests:
   * `CD.get()` and `CD.getCORS()` return the (integer) http status as the second argument of their callbacks. This is currently completely backwards-compatible, but we would like to make backwards-incompatible changes to this API in the future.
 
 ### 3.2.0
-  * Support `CD.cancel()` for when crop wants to show fallback but not trigger error condition
-  * Support `CD.throwError()` for when crop fails (such as XHR failure) and trigger error
+  * Support `CD.cancelRequest(msg)` for when crop wants to show fallback but not trigger error condition
+  * Support `CD.throwError(msg)` for when crop fails (such as XHR failure) and trigger error
   * `CD.begin(msg)` and `CD.end(msg)` support an argument that will be logged for easier debugging
 
 ### 3.1.1
