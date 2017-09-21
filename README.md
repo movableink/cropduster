@@ -161,6 +161,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 3.4.0
+  * Exposes the `content-type` response header within the callback of `CD.get()`.
+
 ### 3.3.0
   * Add support for `CD.waitForAsset()`. This API can be used to ensure that we will not render while the passed URL is in-flight.
 
