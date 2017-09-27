@@ -3,6 +3,11 @@ var container = $("<div style='position: absolute; left: -5000px;'></div>").appe
 // Disable debugging output
 CD.log = function() {};
 
+// Stub out search string
+CD._searchString = function() {
+  return 'foo=bar&baz%20test=quux%20value';
+};
+
 var imageSuccessStub = function() {
   var self = this;
   setTimeout(function() {
@@ -25,6 +30,18 @@ QUnit.test("CD.param when parameter not found", function() {
   equal(CD.param('not_found'), null, "returns null");
 });
 
+QUnit.test("CD.param when parameter is found", function() {
+  equal(CD.param('foo'), 'bar', "returns value");
+});
+
+QUnit.test("CD.params returns all query params", function() {
+  deepEqual(CD.params(), {'baz test': 'quux value', foo: 'bar'}, "returns the url params");
+});
+
+QUnit.test("CD.params with argument returns that query param", function() {
+  equal(CD.params('baz test'), 'quux value', "returns the url param");
+});
+
 // can't test CD.param returning query params from here, unfortunately...
 
 QUnit.test("CD.autofill", function() {
@@ -32,7 +49,6 @@ QUnit.test("CD.autofill", function() {
   var el = $("<div id='autofill_foo'></div>");
   container.append(el);
 
-  CD._urlParams = {foo: 'bar'};
   CD.autofill();
   equal(el.html(), 'bar', "auto-fills the query param into the element");
 });
