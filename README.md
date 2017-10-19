@@ -161,6 +161,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 3.4.1
+  * Adds `CD.params()`, returning an object with all parameters.
+
 ### 3.4.0
   * Exposes the `content-type` response header within the callback of `CD.get()`.
 
