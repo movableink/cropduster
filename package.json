@@ -18,8 +18,7 @@
     "sinon": "^1.17.6"
   },
   "scripts": {
-    "test": "node_modules/karma/bin/karma start",
-    "postinstall": "node_modules/bower/bin/bower install"
+    "test": "node_modules/karma/bin/karma start"
   },
   "repository": {
     "type": "git",
