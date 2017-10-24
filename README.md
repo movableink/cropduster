@@ -161,6 +161,9 @@ Alternatively, for command-line tests:
 
 ## Changelog
 
+### 3.4.2
+  * Remove `bower` from npm postinstall, for npm usage.
+
 ### 3.4.1
   * Adds `CD.params()`, returning an object with all parameters.
 
