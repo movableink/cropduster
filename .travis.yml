@@ -1,5 +1,7 @@
 sudo: false
 dist: trusty
+cache:
+  yarn: true
 
 language: node_js
 node_js:
