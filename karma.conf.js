@@ -1,38 +1,50 @@
-// Karma configuration
-// Generated on Sun Apr 05 2015 17:41:09 GMT-0400 (EDT)
-
 module.exports = function(config) {
   config.set({
-
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
 
     // frameworks to use
-    // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['qunit'],
 
     // list of files / patterns to load in the browser
     files: [
-      'bower_components/jquery/dist/jquery.min.js',
-      // Adding qunit here conflicts with the framework
-      'bower_components/sinon/index.js',
-      'bower_components/sinon-qunit/lib/sinon-qunit.js',
-      'lib/*.js',
-      'tests/*.js'
+      'lib/**/*.js',
+      'tests/**/*.js'
     ],
 
-    plugins: ['karma-qunit', 'karma-phantomjs-launcher'],
+    // preprocess matching files before serving them to the browser
+    preprocessors: {
+      'lib/*.js': ['webpack'],
+      'tests/*.js': ['webpack', 'sourcemap']
+    },
+
+    webpack: {
+      devtool: 'inline-source-map',
+      module: {
+        rules: [
+          {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            use: {
+              loader: 'babel-loader',
+              options: {
+                presets: ['env']
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    webpackMiddleware: {
+      noInfo: true
+    },
 
     // list of files to exclude
     exclude: [],
 
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {},
-
     // test results reporter to use
     // possible values: 'dots', 'progress'
-    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['progress'],
 
     // web server port
