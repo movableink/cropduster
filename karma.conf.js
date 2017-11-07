@@ -8,13 +8,13 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'lib/**/*.js',
+      'src/**/*.js',
       'tests/**/*.js'
     ],
 
     // preprocess matching files before serving them to the browser
     preprocessors: {
-      'lib/*.js': ['webpack'],
+      'src/*.js': ['webpack'],
       'tests/*.js': ['webpack', 'sourcemap']
     },
 

@@ -1,4 +1,4 @@
-import CD from '../lib/cropduster';
+import CD from '../src/cropduster';
 import jQuery from 'jquery';
 import sinon from 'sinon';
 
