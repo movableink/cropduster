@@ -7,18 +7,16 @@ Movable Ink.
 
 ## Installation
 
-Cropduster is on bower. Install it with:
+Cropduster is on npm. Install it with:
 
 ```bash
-npm install -g bower # if bower is not installed yet
-bower init
-bower install --save cropduster
+npm install --save-dev cropduster
 ```
 
-The use it by referencing it from your HTML page:
+The use it by importing it from your es6-enabled javascript file:
 
-```html
-<script src="bower_components/cropduster/lib/cropduster.js"></script>
+```javascript
+import CD from 'cropduster';
 ```
 
 ## API
@@ -149,11 +147,6 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 ```
 
 ## Testing
-
-    bower install
-    open tests/index.html
-
-Alternatively, for command-line tests:
 
     brew install phantomjs
     npm install
