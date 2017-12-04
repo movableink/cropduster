@@ -252,6 +252,7 @@ QUnit.test("CD.get", function(assert) {
   assert.equal(requests[0].requestHeaders['Accept'], 'application/json');
   assert.equal(requests[0].method, 'GET');
   assert.equal(requests[0].async, true);
+  assert.equal(requests[0].withCredentials, true);
   assert.equal(requests[0].url, "http://google.com");
 
   xhr.restore();
