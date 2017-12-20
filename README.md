@@ -162,6 +162,9 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 4.0.0
+  * Switch from bower to npm; CD is now exported as es6 module. See the new installation instructions above.
+
 ### 3.4.2
   * Remove `bower` from npm postinstall, for npm usage.
 

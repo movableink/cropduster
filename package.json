@@ -1,6 +1,6 @@
 {
   "name": "cropduster",
-  "version": "3.4.2",
+  "version": "4.0.0",
   "description": "Library for building web pages for use with Movable Ink Web Crops",
   "main": "src/cropduster.js",
   "directories": {
