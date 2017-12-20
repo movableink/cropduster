@@ -6,7 +6,3 @@ cache:
 language: node_js
 node_js:
   - "8"
-
-before_script:
-  - yarn global add bower
-  - bower install

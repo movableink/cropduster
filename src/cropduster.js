@@ -1,4 +1,4 @@
-window.CD = {
+const CD = {
   CORS_PROXY_SERVER : "http://cors.movableink.com",
 
   $: function(selector, doc) {
@@ -329,3 +329,5 @@ window.CD = {
     return hash.toString();
   }
 };
+
+export default CD;
