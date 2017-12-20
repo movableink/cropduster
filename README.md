@@ -19,6 +19,14 @@ The use it by importing it from your es6-enabled javascript file:
 import CD from 'cropduster';
 ```
 
+## Legacy Installation
+
+If you are unable to use es6, you can find an es5 version at
+
+http://projects.movableink.com/production/libs/cropduster.[version].js
+
+Where you replace `[version]` with the version you want to use.
+
 ## API
 
 ### Selecting elements
