@@ -201,31 +201,47 @@ const CD = {
     callback = args.pop();
     options = args[1] || {};
 
-    var msg = "xhr: " + url;
-
-    var req = new XMLHttpRequest();
-
-    req.onerror = function () {
-      CD.capture(msg);
-      CD.log("XHR error for " + url);
-      callback(null, this.status);
-    };
-    req.onload = function() {
-      CD.capture(msg);
-      var contentType = this.getResponseHeader('content-type');
-      callback(this.responseText, this.status, contentType);
-    };
-
-    req.open(options.method || 'GET', url, true);
-
-    if(options.headers) {
-      for(var header in options.headers) {
-        req.setRequestHeader(header, options.headers[header]);
-      }
+    if (!callback) {
+      callback = function() { /* do nothing by default */ };
     }
 
-    req.send(options.body);
-    CD.suspend(options.maxSuspension, msg);
+    var msg = "xhr: " + url;
+
+    return new Promise(function(resolve, reject) {
+      var req = new XMLHttpRequest();
+
+      req.onerror = function () {
+        CD.capture(msg);
+        CD.log("XHR error for " + url);
+
+        reject({
+          status: this.status,
+          statusText: req.statusText
+        });
+
+        callback(null, this.status);
+      };
+
+      req.onload = function() {
+        CD.capture(msg);
+        var contentType = this.getResponseHeader('content-type');
+
+        resolve(this.responseText, this.status, contentType);
+
+        callback(this.responseText, this.status, contentType);
+      };
+
+      req.open(options.method || 'GET', url, true);
+
+      if(options.headers) {
+        for(var header in options.headers) {
+          req.setRequestHeader(header, options.headers[header]);
+        }
+      }
+
+      req.send(options.body);
+      CD.suspend(options.maxSuspension, msg);
+    });
   },
 
   getImage: function(url, options, callback) {
@@ -236,17 +252,24 @@ const CD = {
     options = args[1] || {};
     var msg = "getImage: " + url;
 
-    var img = new Image();
-    img.onload = function() {
-      CD.capture(msg);
-      if(callback) { callback(img); }
-    };
-    img.onerror = function() {
-      CD.capture(msg);
-      callback(null);
-    };
-    img.src = url;
-    CD.suspend(options.maxSuspension, msg);
+
+    return new Promise(function(resolve, reject) {
+      var img = new Image();
+      img.onload = function() {
+        CD.capture(msg);
+        resolve(img);
+        if(callback) { return callback(img); }
+      };
+
+      img.onerror = function(event) {
+        CD.capture(msg);
+        reject(event);
+        callback(null);
+      };
+
+      img.src = url;
+      CD.suspend(options.maxSuspension, msg);
+    });
   },
 
   getImages: function(urls, options, callback, singleCallback) {
@@ -263,48 +286,51 @@ const CD = {
     var calledIndex = -1;
     var msg = "getImages";
 
-    for(var i = 0; i < urls.length; i++) {
-      (function(url, i){
+    return new Promise(function(resolve, reject) {
+      for(var i = 0; i < urls.length; i++) {
+        (function(url, i){
 
-        var img = new Image();
+          var img = new Image();
 
-        img.onload = function() {
-          imagesLeft -= 1;
-          imgs[i] = img;
+          img.onload = function() {
+            imagesLeft -= 1;
+            imgs[i] = img;
+            callbackNext();
+            finish();
+          };
+          img.onerror = function() {
+            imagesLeft -= 1;
+            CD.log("Image load error for " + url);
+            finish();
+          };
+
+          img.src = url;
+        }(urls[i], i));
+      }
+
+      CD.suspend(options.maxSuspension, msg);
+
+      function callbackNext() {
+        var next = calledIndex + 1;
+        if(imgs[next]) {
+          if(singleCallback) {
+            singleCallback(imgs[next]);
+          }
+          calledIndex = next;
           callbackNext();
-          finish();
-        };
-        img.onerror = function() {
-          imagesLeft -= 1;
-          CD.log("Image load error for " + url);
-          finish();
-        };
-
-        img.src = url;
-      })(urls[i], i);
-    }
-
-    CD.suspend(options.maxSuspension, msg);
-
-    function callbackNext() {
-      var next = calledIndex + 1;
-      if(imgs[next]) {
-        if(singleCallback) {
-          singleCallback(imgs[next]);
-        }
-        calledIndex = next;
-        callbackNext();
-      }
-    }
-
-    function finish() {
-      if(imagesLeft == 0) {
-        CD.capture(msg);
-        if(callback) {
-          callback(imgs);
         }
       }
-    }
+
+      function finish() {
+        if(imagesLeft === 0) {
+          CD.capture(msg);
+          resolve(imgs);
+          if(callback) {
+            return callback(imgs);
+          }
+        }
+      }
+    });
   },
 
   waitForAsset: function(assetUrl) {
