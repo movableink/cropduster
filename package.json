@@ -26,7 +26,8 @@
   },
   "scripts": {
     "test": "node_modules/karma/bin/karma start",
-    "build": "sed 's/export default CD;//' src/cropduster.js | sed 's/const CD/window.CD/' > dist/cropduster.es5.js"
+    "build": "sed 's/export default CD;//' src/cropduster.js | sed 's/const CD/window.CD/' > dist/cropduster.es5.js",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
