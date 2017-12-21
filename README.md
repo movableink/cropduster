@@ -162,6 +162,11 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 4.2.0
+  * Compiles the app with Webpack
+  * Imports [MI fork of Promiscuous](https://github.com/movableink/promiscuous') as our Capturama-compatible implementation of the Promise spec.
+  * Returns Promises from CD.get, CD.getCORS, CD.getImage and CD.getImages
+
 ### 4.1.0
   * Add `withCredentials: true` to all `CD.get()` requests.
 
