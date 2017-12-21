@@ -1,3 +1,5 @@
+import Promise from 'promiscuous';
+
 const CD = {
   CORS_PROXY_SERVER : "http://cors.movableink.com",
 
