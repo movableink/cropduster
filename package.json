@@ -6,7 +6,9 @@
   "directories": {
     "test": "tests"
   },
-  "dependencies": {},
+  "dependencies": {
+    "promiscuous": "https://github.com/movableink/promiscuous"
+  },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
@@ -20,14 +22,13 @@
     "karma-sinon": "^1.0.5",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.5",
-    "promiscuous": "https://github.com/movableink/promiscuous",
     "qunitjs": "^2.4.1",
     "sinon": "^4.1.1",
     "webpack": "^3.8.1"
   },
   "scripts": {
     "test": "node_modules/karma/bin/karma start",
-    "build": "sed 's/export default CD;//' src/cropduster.js | sed 's/const CD/window.CD/' > dist/cropduster.es5.js",
+    "build": "yarn run webpack",
     "prepublish": "npm run build"
   },
   "repository": {
