@@ -203,8 +203,8 @@ const CD = {
     callback = args.pop();
     options = args[1] || {};
 
-    if (!callback) {
-      callback = function() { /* do nothing by default */ };
+    if (typeof callback !== 'function') {
+      callback = () => { /* do nothing by default */ };
     }
 
     var msg = "xhr: " + url;
@@ -228,7 +228,11 @@ const CD = {
         CD.capture(msg);
         var contentType = this.getResponseHeader('content-type');
 
-        resolve(this.responseText, this.status, contentType);
+        resolve({
+          contentType,
+          data: this.responseText,
+          status: this.status,
+        });
 
         callback(this.responseText, this.status, contentType);
       };
