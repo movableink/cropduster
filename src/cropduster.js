@@ -239,6 +239,8 @@ const CD = {
 
       req.open(options.method || 'GET', url, true);
 
+      req.withCredentials = true;
+
       if(options.headers) {
         for(var header in options.headers) {
           req.setRequestHeader(header, options.headers[header]);

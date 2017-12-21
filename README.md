@@ -162,6 +162,9 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 4.1.0
+  * Add `withCredentials: true` to all `CD.get()` requests.
+
 ### 4.0.1
   * npm publishes the alternate es5 scripts in dist/cropduster.es5.js.
 
