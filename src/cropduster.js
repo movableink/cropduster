@@ -1,6 +1,12 @@
-import Promise from 'promiscuous';
+import PromiseClassFactory from './promiscuous-patched';
 
 const CD = {
+  /*
+   * We monkey patch the Promise class at the bottom of this file, calling suspend
+   * and capture in the appropriate places to make a "MIPromise" that is compatible
+   * with Capturama's execution loop.
+   */
+  MIPromise: null,
   CORS_PROXY_SERVER : "http://cors.movableink.com",
 
   $: function(selector, doc) {
@@ -197,147 +203,148 @@ const CD = {
   },
 
   get: function(url, options, callback) {
-    var args = Array.prototype.slice.call(arguments);
+    const args = Array.prototype.slice.call(arguments);
 
     url = args[0];
-    callback = args.pop();
-    options = args[1] || {};
-
-    if (typeof callback !== 'function') {
-      callback = () => { /* do nothing by default */ };
+    if (typeof options === 'function') {
+      options = args[1] || {};
+      callback = options;
     }
 
-    var msg = "xhr: " + url;
-
-    return new Promise(function(resolve, reject) {
-      var req = new XMLHttpRequest();
-
-      req.onerror = function () {
-        CD.capture(msg);
-        CD.log("XHR error for " + url);
-
-        reject({
-          status: this.status,
-          statusText: req.statusText
-        });
-
-        callback(null, this.status);
-      };
-
-      req.onload = function() {
-        CD.capture(msg);
-        var contentType = this.getResponseHeader('content-type');
-
-        resolve({
-          contentType,
-          data: this.responseText,
-          status: this.status,
-        });
-
-        callback(this.responseText, this.status, contentType);
-      };
-
-      req.open(options.method || 'GET', url, true);
-
-      req.withCredentials = true;
-
-      if(options.headers) {
-        for(var header in options.headers) {
-          req.setRequestHeader(header, options.headers[header]);
-        }
+    return this.getPromise(url, options).then(
+      (response) => {
+        callback(response.data, response.status, response.contentType);
+        return response;
+      },
+      ({ status }) => {
+        callback(null, status);
+        return null;
       }
+    );
+  },
 
-      req.send(options.body);
-      CD.suspend(options.maxSuspension, msg);
+  getPromise: function(url, options) {
+    options = options || {};
+    const msg = "xhr: " + url;
+
+    return new CD.MIPromise(function(resolve, reject) {
+      try {
+        const req = new XMLHttpRequest();
+
+        req.onerror = function () {
+          CD.capture(msg);
+          CD.log("XHR error for " + url);
+
+          reject({
+            status: this.status,
+            statusText: req.statusText
+          });
+        };
+
+        req.onload = function() {
+          CD.capture(msg);
+          const contentType = this.getResponseHeader('content-type');
+
+          resolve({
+            contentType,
+            data: this.responseText,
+            status: this.status,
+          });
+        };
+
+        req.open(options.method || 'GET', url, true);
+
+        req.withCredentials = true;
+
+        if(options.headers) {
+          for(const header in options.headers) {
+            req.setRequestHeader(header, options.headers[header]);
+          }
+        }
+
+        req.send(options.body);
+        CD.suspend(options.maxSuspension, msg);
+      } catch (error) {
+        reject({
+          message: `Cropduster failed to create Promise: ${error}`,
+          error: error
+        });
+      }
     });
   },
 
-  getImage: function(url, options, callback) {
-    var args = Array.prototype.slice.call(arguments);
+  getImage(url, options, callback) {
+    const args = Array.prototype.slice.call(arguments);
 
     callback = args.pop();
     url = args[0];
     options = args[1] || {};
-    var msg = "getImage: " + url;
 
+    return this.getImagePromise(url, options.maxSuspension).then(
+      image => callback(image),
+      _ => callback(null)
+    );
+  },
 
-    return new Promise(function(resolve, reject) {
-      var img = new Image();
+  getImagePromise(url, maxSuspension) {
+    const msg = "getImage: " + url;
+
+    return new CD.MIPromise(function(resolve, reject) {
+      const img = new Image();
+
       img.onload = function() {
         CD.capture(msg);
         resolve(img);
-        if(callback) { return callback(img); }
       };
 
       img.onerror = function(event) {
         CD.capture(msg);
         reject(event);
-        callback(null);
       };
 
       img.src = url;
-      CD.suspend(options.maxSuspension, msg);
+      CD.suspend(maxSuspension, msg);
     });
   },
 
-  getImages: function(urls, options, callback, singleCallback) {
+  getImages(urls, options, afterAll, afterEach) {
     if(typeof(options) === "function") {
-      singleCallback = callback;
-      callback = options;
+      afterEach = afterAll;
+      afterAll = options;
       options = {};
     }
 
     options = options || {};
 
-    var imagesLeft = urls.length;
-    var imgs = [];
-    var calledIndex = -1;
-    var msg = "getImages";
-
-    return new Promise(function(resolve, reject) {
-      for(var i = 0; i < urls.length; i++) {
-        (function(url, i){
-
-          var img = new Image();
-
-          img.onload = function() {
-            imagesLeft -= 1;
-            imgs[i] = img;
-            callbackNext();
-            finish();
-          };
-          img.onerror = function() {
-            imagesLeft -= 1;
-            CD.log("Image load error for " + url);
-            finish();
-          };
-
-          img.src = url;
-        }(urls[i], i));
-      }
-
-      CD.suspend(options.maxSuspension, msg);
-
-      function callbackNext() {
-        var next = calledIndex + 1;
-        if(imgs[next]) {
-          if(singleCallback) {
-            singleCallback(imgs[next]);
-          }
-          calledIndex = next;
-          callbackNext();
+    return this.getImagesPromise(urls, options.maxSuspension, afterEach).then(
+      (images) => {
+        if (afterAll) {
+          afterAll(images);
         }
-      }
 
-      function finish() {
-        if(imagesLeft === 0) {
-          CD.capture(msg);
-          resolve(imgs);
-          if(callback) {
-            return callback(imgs);
-          }
+        resolve(images);
+      },
+      _ => reject(null)
+    );
+  },
+
+  getImagesPromise(urls, maxSuspension, afterEach) {
+    const msg = 'getImages';
+    CD.suspend(options.maxSuspension, msg);
+
+    const promises = urls.map((url) => {
+      return this.getImagePromise(url, maxSuspension).then((img) => {
+        if (afterEach) {
+          afterEach(img);
         }
-      }
+
+        return img;
+      })
+    });
+
+    return CD.MIPromise.all(promises).then((images) => {
+      CD.capture(msg);
+      return images;
     });
   },
 
@@ -363,5 +370,10 @@ const CD = {
     return hash.toString();
   }
 };
+
+// Our monkey-patched Promise needs to be passed the suspend and capture
+// functions to avoid a circularly dependency between our version of Promiscuous's
+// Promise implementation, and Cropduster itself.
+CD.MIPromise = PromiseClassFactory(CD.suspend, CD.capture);
 
 export default CD;

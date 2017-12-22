@@ -2726,10 +2726,6 @@ progress@~1.1.8:
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/progress/-/progress-1.1.8.tgz#e260c78f6161cdd9b0e56cc3e0a85de17c7a57be"
 
-"promiscuous@https://github.com/movableink/promiscuous":
-  version "0.7.1"
-  resolved "https://github.com/movableink/promiscuous#db453936a5183491ceb1f8c01e0a4e1fd9e9678d"
-
 prr@~0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/prr/-/prr-0.0.0.tgz#1a84b85908325501411853d0081ee3fa86e2926a"

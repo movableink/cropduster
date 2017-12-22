@@ -6,9 +6,6 @@
   "directories": {
     "test": "tests"
   },
-  "dependencies": {
-    "promiscuous": "https://github.com/movableink/promiscuous"
-  },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
