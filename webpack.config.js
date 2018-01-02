@@ -1,3 +1,4 @@
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const path = require('path');
 
 module.exports = {
@@ -6,6 +7,7 @@ module.exports = {
     filename: 'cropduster.js',
     path: path.resolve(__dirname, 'dist')
   },
+  plugins: [new UglifyJsPlugin()],
   devtool: 'source-map',
   module: {
     rules: [

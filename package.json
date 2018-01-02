@@ -21,6 +21,7 @@
     "karma-webpack": "^2.0.5",
     "qunitjs": "^2.4.1",
     "sinon": "^4.1.1",
+    "uglifyjs-webpack-plugin": "^1.1.5",
     "webpack": "^3.10.0"
   },
   "scripts": {
