@@ -131,47 +131,35 @@ const CD = {
   // internal, do not modify
   _readyToCapture: true,
 
-  _openCalls: 0,
-
   _reset: function() {
-    CD._openCalls = 0;
     CD._readyToCapture = true;
   },
 
   suspend: function(maxSuspension, msg) {
+    console.log("suspend: " + msg);
     msg = msg || "manual suspension";
 
     if(maxSuspension) {
       msg += ", will end in " + maxSuspension + "ms";
 
       setTimeout(function() {
-        CD.capture(msg);
+        CD.resume(msg);
       }, maxSuspension);
     }
 
-    CD._openCalls++;
-    CD._readyToCapture = false;
     if (typeof(MICapture) == 'undefined') {
       CD.log("suspended: " + msg);
     } else {
-      MICapture.begin(msg);
+      MICapture.suspend(msg);
     }
   },
 
-  capture: function(msg) {
-    CD._openCalls--;
-
-    if(CD._openCalls > 0) {
-      CD.log("outstanding calls, not capturing: " + msg);
-      return;
-    }
-
-    CD._readyToCapture = true;
+  resume: function() {
+    console.log("resume: ");
     if(typeof(MICapture) == 'undefined') {
-      CD.log("now ready to capture: " + msg);
+      CD.log("resuming suspending capture: " + msg);
     } else {
-      CD.$('body')[0].style.width = CD.$('body')[0].offsetWidth + 'px';
-      MICapture.end(msg);
+      MICapture.resume();
     }
   },
 
@@ -224,7 +212,7 @@ const CD = {
         const req = new XMLHttpRequest();
 
         req.onerror = function () {
-          CD.capture(msg);
+          CD.resume(msg);
           CD.log("XHR error for " + url);
 
           reject({
@@ -234,7 +222,7 @@ const CD = {
         };
 
         req.onload = function() {
-          CD.capture(msg);
+          CD.resume(msg);
           const contentType = this.getResponseHeader('content-type');
 
           resolve({
@@ -285,12 +273,12 @@ const CD = {
       const img = new Image();
 
       img.onload = function() {
-        CD.capture(msg);
+        CD.resume(msg);
         resolve(img);
       };
 
       img.onerror = function(event) {
-        CD.capture(msg);
+        CD.resume(msg);
         reject(event);
       };
 
@@ -335,7 +323,7 @@ const CD = {
     });
 
     return Promise.all(promises).then((images) => {
-      CD.capture(msg);
+      CD.resume(msg);
       return images;
     });
   },
