@@ -252,8 +252,27 @@ QUnit.test("CD.get", function(assert) {
   assert.equal(requests[0].requestHeaders['Accept'], 'application/json');
   assert.equal(requests[0].method, 'GET');
   assert.equal(requests[0].async, true);
-  assert.equal(requests[0].withCredentials, true);
+  assert.equal(requests[0].withCredentials, false);
   assert.equal(requests[0].url, "http://google.com");
+
+  xhr.restore();
+});
+
+QUnit.test("CD.get withCredentials option", function (assert) {
+  var xhr = sinon.useFakeXMLHttpRequest();
+  var requests = this.requests = [];
+  xhr.onCreate = function (xhr) {
+    requests.push(xhr);
+  };
+
+  var spy = sinon.spy();
+
+  CD.get("http://google.com", {
+    withCredentials: true
+  }, spy);
+
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].withCredentials, true);
 
   xhr.restore();
 });
