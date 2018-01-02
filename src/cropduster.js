@@ -1,12 +1,4 @@
-import PromiseClassFactory from './promiscuous-patched';
-
 const CD = {
-  /*
-   * We monkey patch the Promise class at the bottom of this file, calling suspend
-   * and capture in the appropriate places to make a "MIPromise" that is compatible
-   * with Capturama's execution loop.
-   */
-  MIPromise: null,
   CORS_PROXY_SERVER : "http://cors.movableink.com",
 
   $: function(selector, doc) {
@@ -227,7 +219,7 @@ const CD = {
     options = options || {};
     const msg = "xhr: " + url;
 
-    return new CD.MIPromise(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
       try {
         const req = new XMLHttpRequest();
 
@@ -289,7 +281,7 @@ const CD = {
   getImagePromise(url, maxSuspension) {
     const msg = "getImage: " + url;
 
-    return new CD.MIPromise(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
       const img = new Image();
 
       img.onload = function() {
@@ -342,7 +334,7 @@ const CD = {
       })
     });
 
-    return CD.MIPromise.all(promises).then((images) => {
+    return Promise.all(promises).then((images) => {
       CD.capture(msg);
       return images;
     });
@@ -370,10 +362,5 @@ const CD = {
     return hash.toString();
   }
 };
-
-// Our monkey-patched Promise needs to be passed the suspend and capture
-// functions to avoid a circularly dependency between our version of Promiscuous's
-// Promise implementation, and Cropduster itself.
-CD.MIPromise = PromiseClassFactory(CD.suspend, CD.capture);
 
 export default CD;
