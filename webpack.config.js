@@ -7,7 +7,7 @@ module.exports = {
     filename: 'cropduster.js',
     path: path.resolve(__dirname, 'dist')
   },
-  plugins: [new UglifyJsPlugin()],
+  plugins: [new UglifyJsPlugin({ sourceMap: true })],
   devtool: 'source-map',
   module: {
     rules: [
