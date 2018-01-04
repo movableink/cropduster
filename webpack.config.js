@@ -26,7 +26,7 @@ const importConfig = {
     library: 'cropduster',
     libraryTarget: 'umd',
     filename: 'cropduster.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist')
   },
   ...defaultConfig
 };

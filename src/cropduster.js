@@ -164,18 +164,17 @@ const CD = {
     }
   },
 
-  getCORS: function(url, options, callback) {
-    var args = Array.prototype.slice.call(arguments);
+  getCORS(url, options = {}, callback) {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
 
-    url = args[0];
-    callback = args.pop();
-    options = args[1] || {};
-
-    options.corsCacheTime = options.corsCacheTime || 10 * 1000;
-    if(!url.match(/cors.movableink.com/)) {
+    if (!url.match(/cors.movableink.com/)) {
       url = CD.proxyUrl(url);
     }
 
+    options.corsCacheTime = options.corsCacheTime || 10 * 1000;
     options.headers = options.headers || {};
     options.headers['x-reverse-proxy-ttl'] = options.corsCacheTime / 1000;
     options.headers['x-mi-cbe'] = this._hashForRequest(url, options);
@@ -183,13 +182,13 @@ const CD = {
     return CD.get(url, options, callback);
   },
 
-  get: function(url, options, callback) {
+  get(url, options = {}, callback) {
     if (typeof options === 'function') {
       callback = options;
       options = {};
     }
 
-    const deprecatedCallback = () => {
+    const deprecatedCallback = function() {
       if (callback && typeof callback === 'function') {
         CD.log('callbacks are deprecated in cropduster, prefer using promises with asynchronous operations');
         return callback(...arguments);
@@ -199,9 +198,9 @@ const CD = {
     const msg = `XHR: ${url}`;
     CD.pause(options.maxSuspension || 0, msg);
 
-    const request = CD._requestFromOptions(url, options);
+    const requestOptions = CD._optionsForFetch(options);
 
-    return fetch(request).then((response) => {
+    return fetch(url, requestOptions).then((response) => {
       if (!response.ok) {
         throw new Error(response.statusText);
       }
@@ -223,11 +222,10 @@ const CD = {
 
       deprecatedCallback(null);
 
-      return {
-        error,
-        message: `Cropduster failed to fetch XHR: ${error}`
-      };
-    }).finally(() => CD.resume(msg));
+      throw error;
+    }).finally(() => {
+      CD.resume(msg)
+    });
   },
 
   getImage(url, options, callback) {
@@ -329,15 +327,15 @@ const CD = {
     return hash.toString();
   },
 
-  _requestFromOptions: function(url, options) {
-    return new Request(url, {
-      credentials: true,
+  _optionsForFetch(options) {
+    return {
+      credentials: 'include',
       redirect: 'follow',
       headers: new Headers(options.headers || {}),
       method: options.method || 'GET',
       body: options.body,
       mode: 'cors'
-    });
+    };
   }
 };
 
