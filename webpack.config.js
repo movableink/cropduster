@@ -22,17 +22,19 @@ const defaultConfig = {
 };
 
 const importConfig = {
-  target: 'node',
   output: {
+    library: 'cropduster',
+    libraryTarget: 'umd',
     filename: 'cropduster.js',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, 'dist'),
   },
   ...defaultConfig
 };
 
 const browserConfig = {
-  target: 'web',
   output: {
+    library: 'CD',
+    libraryTarget: 'window',
     filename: 'cropduster.browser.js',
     path: path.resolve(__dirname, 'dist')
   },
