@@ -181,74 +181,50 @@ const CD = {
   },
 
   get: function(url, options, callback) {
-    const args = Array.prototype.slice.call(arguments);
-
-    url = args[0];
     if (typeof options === 'function') {
-      options = args[1] || {};
       callback = options;
+      options = {};
     }
 
-    return this.getPromise(url, options).then(
-      (response) => {
-        callback(response.data, response.status, response.contentType);
-        return response;
-      },
-      ({ status }) => {
-        callback(null, status);
-        return null;
+    const deprecatedCallback = () => {
+      if (callback && typeof callback === 'function') {
+        CD.log('callbacks are deprecated in cropduster, prefer using promises with asynchronous operations');
+        return callback(...arguments);
       }
-    );
-  },
+    };
 
-  getPromise: function(url, options) {
-    options = options || {};
-    const msg = "xhr: " + url;
+    const msg = `XHR: ${url}`;
+    CD.pause(options.maxSuspension || 0, msg);
 
-    return new Promise(function(resolve, reject) {
-      try {
-        const req = new XMLHttpRequest();
+    const request = CD._requestFromOptions(url, options);
 
-        req.onerror = function () {
-          CD.resume(msg);
-          CD.log("XHR error for " + url);
-
-          reject({
-            status: this.status,
-            statusText: req.statusText
-          });
-        };
-
-        req.onload = function() {
-          CD.resume(msg);
-          const contentType = this.getResponseHeader('content-type');
-
-          resolve({
-            contentType,
-            data: this.responseText,
-            status: this.status,
-          });
-        };
-
-        req.open(options.method || 'GET', url, true);
-
-        req.withCredentials = true;
-
-        if(options.headers) {
-          for(const header in options.headers) {
-            req.setRequestHeader(header, options.headers[header]);
-          }
-        }
-
-        req.send(options.body);
-        CD.pause(options.maxSuspension, msg);
-      } catch (error) {
-        reject({
-          message: `Cropduster failed to create Promise: ${error}`,
-          error: error
-        });
+    return fetch(request).then((response) => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
       }
-    });
+
+      const status = response.status;
+      const contentType = response.headers.get('content-type');
+
+      return response.text().then(data => {
+        deprecatedCallback(data, status, contentType);
+
+        return {
+          data,
+          status,
+          contentType
+        };
+      });
+    }).catch((error) => {
+      CD.log(`XHR error for ${url}: ${error}`);
+
+      deprecatedCallback(null);
+
+      return {
+        error,
+        message: `Cropduster failed to fetch XHR: ${error}`
+      };
+    }).finally(() => CD.resume(msg));
   },
 
   getImage(url, options, callback) {
@@ -348,6 +324,17 @@ const CD = {
       hash = ((hash << 5) - hash) + str.charCodeAt(i) & 0xFFFFFFFF;
     }
     return hash.toString();
+  },
+
+  _requestFromOptions: function(url, options) {
+    return new Request(url, {
+      credentials: true,
+      redirect: 'follow',
+      headers: new Headers(options.headers || {}),
+      method: options.method || 'GET',
+      body: options.body,
+      mode: 'cors'
+    });
   }
 };
 
