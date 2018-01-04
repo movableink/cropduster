@@ -14,7 +14,6 @@
     "karma": "^1.7.1",
     "karma-babel-preprocessor": "^7.0.0",
     "karma-chrome-launcher": "^2.2.0",
-    "karma-phantomjs-launcher": "^1.0.4",
     "karma-qunit": "^1.2.1",
     "karma-sinon": "^1.0.5",
     "karma-sourcemap-loader": "^0.3.7",
