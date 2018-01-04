@@ -135,31 +135,29 @@ const CD = {
     CD._readyToCapture = true;
   },
 
-  suspend: function(maxSuspension, msg) {
-    console.log("suspend: " + msg);
+  pause: function(maxSuspension, msg) {
     msg = msg || "manual suspension";
 
     if(maxSuspension) {
       msg += ", will end in " + maxSuspension + "ms";
 
       setTimeout(function() {
-        CD.resume(msg);
+        MICapture.resume(msg);
       }, maxSuspension);
     }
 
     if (typeof(MICapture) == 'undefined') {
-      CD.log("suspended: " + msg);
+      CD.log("paused: " + msg);
     } else {
-      MICapture.suspend(msg);
+      MICapture.pause(msg);
     }
   },
 
-  resume: function() {
-    console.log("resume: ");
-    if(typeof(MICapture) == 'undefined') {
-      CD.log("resuming suspending capture: " + msg);
+  resume: function(msg) {
+    if(typeof MICapture === 'undefined') {
+      CD.log("resuming paused capture: " + msg);
     } else {
-      MICapture.resume();
+      MICapture.resume(msg);
     }
   },
 
@@ -243,7 +241,7 @@ const CD = {
         }
 
         req.send(options.body);
-        CD.suspend(options.maxSuspension, msg);
+        CD.pause(options.maxSuspension, msg);
       } catch (error) {
         reject({
           message: `Cropduster failed to create Promise: ${error}`,
@@ -283,7 +281,7 @@ const CD = {
       };
 
       img.src = url;
-      CD.suspend(maxSuspension, msg);
+      CD.pause(maxSuspension, msg);
     });
   },
 
@@ -296,21 +294,23 @@ const CD = {
 
     options = options || {};
 
-    return this.getImagesPromise(urls, options.maxSuspension, afterEach).then(
-      (images) => {
-        if (afterAll) {
-          afterAll(images);
-        }
+    return new Promise((resolve, reject) => {
+      return this.getImagesPromise(urls, options.maxSuspension, afterEach).then(
+        (images) => {
+          if (afterAll) {
+            afterAll(images);
+          }
 
-        resolve(images);
-      },
-      _ => reject(null)
-    );
+          resolve(images);
+        },
+        _ => reject(null)
+      );
+    });
   },
 
   getImagesPromise(urls, maxSuspension, afterEach) {
     const msg = 'getImages';
-    CD.suspend(options.maxSuspension, msg);
+    CD.pause(maxSuspension, msg);
 
     const promises = urls.map((url) => {
       return this.getImagePromise(url, maxSuspension).then((img) => {
@@ -329,7 +329,7 @@ const CD = {
   },
 
   waitForAsset: function(assetUrl) {
-    if(typeof(MICapture) == "undefined") {
+    if(typeof MICapture === "undefined") {
       CD.log("Wait for asset: " + assetUrl);
     } else {
       MICapture.waitForAsset(assetUrl);
