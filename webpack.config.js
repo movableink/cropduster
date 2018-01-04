@@ -1,12 +1,8 @@
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const path = require('path');
 
-module.exports = {
+const defaultConfig = {
   entry: './src/cropduster.js',
-  output: {
-    filename: 'cropduster.js',
-    path: path.resolve(__dirname, 'dist')
-  },
   plugins: [new UglifyJsPlugin({ sourceMap: true })],
   devtool: 'source-map',
   module: {
@@ -24,3 +20,23 @@ module.exports = {
     ]
   }
 };
+
+const importConfig = {
+  target: 'node',
+  output: {
+    filename: 'cropduster.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  ...defaultConfig
+};
+
+const browserConfig = {
+  target: 'web',
+  output: {
+    filename: 'cropduster.browser.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  ...defaultConfig
+};
+
+module.exports = [importConfig, browserConfig];
