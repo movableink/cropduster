@@ -1,24 +1,27 @@
 const CD = {
   CORS_PROXY_SERVER : "http://cors.movableink.com",
 
-  $: function(selector, doc) {
+  $(selector, doc) {
     if(!doc) { doc = document; }
     return Array.prototype.slice.call(doc.querySelectorAll(selector));
   },
 
-  param: function(name) {
+  param(name) {
     return CD.params()[name];
   },
 
-  params: function(name) {
-    if(typeof(CD._urlParams) == "undefined") {
+  params(name) {
+    if (typeof(CD._urlParams) === 'undefined') {
       CD._urlParams = {};
-      var match;
-      var search = /([^&=]+)=?([^&]*)/g;
-      var query  = CD._searchString();
-      while (match = search.exec(query))
+      const search = /([^&=]+)=?([^&]*)/g;
+      const query  = CD._searchString();
+      let match = search.exec(query);
+      while (match) {
         CD._urlParams[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+        match = search.exec(query);
+      }
     }
+
     if (name) {
       return CD._urlParams[name];
     } else {
@@ -26,11 +29,11 @@ const CD = {
     }
   },
 
-  _searchString: function() {
+  _searchString() {
     return window.location.search.substring(1);
   },
 
-  autofill: function() {
+  autofill() {
     CD.param("init"); // inits CD._urlParams
     Object.keys(CD._urlParams).forEach(function (key) {
       if (CD._urlParams[key] !== "undefined" && CD._urlParams[key].length > 0) {
@@ -41,25 +44,24 @@ const CD = {
     });
   },
 
-  throwError: function(msg) {
-    if(typeof(MICapture) == "undefined") {
+  throwError(msg) {
+    if (typeof MICapture === "undefined") {
       CD.log("Capturama error: " + msg);
     } else {
       MICapture.error(msg);
     }
   },
 
-  cancelRequest: function(msg) {
-    if(typeof(MICapture) == "undefined") {
+  cancelRequest(msg) {
+    if (typeof MICapture === "undefined") {
       CD.log("Request canceled: " + msg);
     } else {
       MICapture.cancel(msg);
     }
   },
 
-  setImageRedirect: function(imageUrl) {
-    var a = document.querySelector("#mi-redirect-image");
-    a = a || document.createElement('a');
+  setImageRedirect(imageUrl) {
+    const a = document.querySelector("#mi-redirect-image") || document.createElement('a');
 
     a.href = imageUrl;
     a.id = "mi-redirect-image";
@@ -70,24 +72,24 @@ const CD = {
     return a;
   },
 
-  setClickthrough: function(url) {
-    var a = document.querySelector("#mi_dynamic_link");
-    a = a || document.createElement('a');
+  setClickthrough(url) {
+    const a = document.querySelector("#mi_dynamic_link") || document.createElement('a');
+
     a.href = url;
     a.id = "mi_dynamic_link";
     a.style.display = "none";
+
     document.body.appendChild(a);
 
     return a;
   },
 
-  setExtraData: function(dataObject) {
-    var el = document.querySelector("#mi-data");
-    el = el || document.createElement('div');
+  setExtraData(dataObject) {
+    const el = document.querySelector("#mi-data") || document.createElement('div');
     el.id = "mi-data";
     el.style.display = "none";
 
-    var existingData;
+    let existingData;
     try {
       existingData = JSON.parse(el.getAttribute('data-mi-data')) || {};
     } catch(e) {
@@ -95,20 +97,21 @@ const CD = {
       existingData = {};
     }
 
-    for(var i in dataObject) {
-      if(dataObject.hasOwnProperty(i)) {
+    for (const i in dataObject) {
+      if (dataObject.hasOwnProperty(i)) {
         existingData[i] = dataObject[i];
       }
     }
+
     el.setAttribute('data-mi-data', JSON.stringify(existingData));
     document.body.appendChild(el);
 
     return el;
   },
 
-  proxyUrl: function(url) {
-    var a = document.createElement('a');
-    var port = "";
+  proxyUrl(url) {
+    const a = document.createElement('a');
+    let port = "";
     a.href = url;
 
     if (a.port === '0' || a.port === "") {
@@ -131,11 +134,11 @@ const CD = {
   // internal, do not modify
   _readyToCapture: true,
 
-  _reset: function() {
+  _reset() {
     CD._readyToCapture = true;
   },
 
-  pause: function(maxSuspension, msg) {
+  pause(maxSuspension, msg) {
     msg = msg || "manual suspension";
 
     if(maxSuspension) {
@@ -304,7 +307,7 @@ const CD = {
     });
   },
 
-  waitForAsset: function(assetUrl) {
+  waitForAsset(assetUrl) {
     if(typeof MICapture === "undefined") {
       CD.log("Wait for asset: " + assetUrl);
     } else {
@@ -312,11 +315,11 @@ const CD = {
     }
   },
 
-  log: function(message) {
+  log(message) {
     console.log(message);
   },
 
-  _hashForRequest: function(url, options) {
+  _hashForRequest(url, options) {
     var str = url + JSON.stringify(options);
     var hash = 0;
     if (str.length === 0) return hash;
