@@ -223,9 +223,10 @@ const CD = {
       deprecatedCallback(null);
 
       throw error;
-    }).finally(() => {
-      CD.resume(msg)
-    });
+    }).then(
+      () => CD.resume(msg),
+      () => CD.resume(msg)
+    );
   },
 
   getImage(url, options, callback) {
