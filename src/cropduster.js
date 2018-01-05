@@ -188,6 +188,8 @@ const CD = {
       options = {};
     }
 
+    const msg = `XHR: ${url}`;
+
     const deprecatedCallback = function() {
       if (callback && typeof callback === 'function') {
         CD.log('callbacks are deprecated in cropduster, prefer using promises with asynchronous operations');
@@ -195,37 +197,45 @@ const CD = {
       }
     };
 
-    const msg = `XHR: ${url}`;
+    const handleError = (error) => {
+      CD.log(`Error encountered in CD.get for ${url}: ${error}`);
+      CD.resume(msg);
+
+      deprecatedCallback(null);
+
+      if (!error instanceof Error) {
+        error = new Error(error);
+      }
+
+      throw error;
+    };
+
     CD.pause(options.maxSuspension || 0, msg);
 
     const requestOptions = CD._optionsForFetch(options);
 
-    return fetch(url, requestOptions).then((response) => {
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
+    return fetch(url, requestOptions).then(
+      (response) => {
+        if (!response.ok) {
+          handleError(response.statusText); // A non-200 range status was returned
+        }
 
-      const status = response.status;
-      const contentType = response.headers.get('content-type');
+        return response.text().then(
+          (data) => {
+            deprecatedCallback(data, response.status, response.contentType);
 
-      return response.text().then(data => {
-        deprecatedCallback(data, status, contentType);
+            CD.resume(msg);
 
-        return {
-          data,
-          status,
-          contentType
-        };
-      });
-    }).catch((error) => {
-      CD.log(`XHR error for ${url}: ${error}`);
-
-      deprecatedCallback(null);
-
-      throw error;
-    }).then(
-      () => CD.resume(msg),
-      () => CD.resume(msg)
+            return {
+              data,
+              status,
+              contentType
+            };
+          },
+          handleError // The response failed to parse with `.text()`
+        );
+      },
+      handleError // A network or CORS error was hit
     );
   },
 
