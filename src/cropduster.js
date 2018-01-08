@@ -2,7 +2,9 @@ const CD = {
   CORS_PROXY_SERVER: 'http://cors.movableink.com',
 
   $(selector, doc) {
-    if(!doc) { doc = document; }
+    if (!doc) {
+      doc = document;
+    }
     return Array.prototype.slice.call(doc.querySelectorAll(selector));
   },
 
@@ -52,7 +54,7 @@ const CD = {
   },
 
   throwError(msg) {
-    if (typeof MICapture  === 'undefined') {
+    if (typeof MICapture === 'undefined') {
       CD.log('Capturama error: ' + msg);
     } else {
       MICapture.error(msg);
@@ -128,15 +130,8 @@ const CD = {
       port = `:${a.port}`;
     }
 
-    return [
-      CD.CORS_PROXY_SERVER,
-      '/',
-      a.hostname,
-      port,
-      a.pathname,
-      a.search,
-      a.hash
-    ].join('');
+    const { hostname, pathname, search, hash } = a;
+    return `${CD.CORS_PROXY_SERVER}/${hostname}${port}${pathname}${search}${hash}`;
   },
 
   // internal, do not modify
@@ -165,7 +160,7 @@ const CD = {
   },
 
   resume(msg) {
-    if(typeof MICapture === 'undefined') {
+    if (typeof MICapture === 'undefined') {
       CD.log(`resuming paused capture: ${msg}`);
     } else {
       MICapture.resume(msg);
@@ -197,7 +192,7 @@ const CD = {
     }
 
     return this.getPromise(url, options).then(
-      (response) => {
+      response => {
         callback(response.data, response.status, response.contentType);
         return response;
       },
@@ -215,7 +210,7 @@ const CD = {
       try {
         const req = new XMLHttpRequest();
 
-        req.onerror = function () {
+        req.onerror = function() {
           CD.resume(msg);
           CD.log(`XHR error for ${url}`);
 
@@ -232,7 +227,7 @@ const CD = {
           resolve({
             contentType,
             data: this.responseText,
-            status: this.status,
+            status: this.status
           });
         };
 
@@ -240,8 +235,8 @@ const CD = {
 
         req.withCredentials = true;
 
-        if(options.headers) {
-          for(const header in options.headers) {
+        if (options.headers) {
+          for (const header in options.headers) {
             req.setRequestHeader(header, options.headers[header]);
           }
         }
@@ -299,7 +294,7 @@ const CD = {
 
     return new Promise((resolve, reject) => {
       return this.getImagesPromise(urls, options.maxSuspension, afterEach).then(
-        (images) => {
+        images => {
           if (afterAll) {
             afterAll(images);
           }
@@ -315,17 +310,17 @@ const CD = {
     const msg = 'getImages';
     CD.pause(maxSuspension, msg);
 
-    const promises = urls.map((url) => {
-      return this.getImagePromise(url, maxSuspension).then((img) => {
+    const promises = urls.map(url => {
+      return this.getImagePromise(url, maxSuspension).then(img => {
         if (afterEach) {
           afterEach(img);
         }
 
         return img;
-      })
+      });
     });
 
-    return Promise.all(promises).then((images) => {
+    return Promise.all(promises).then(images => {
       CD.resume(msg);
       return images;
     });
@@ -350,7 +345,7 @@ const CD = {
     if (str.length === 0) return hash;
 
     for (const i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i) & 0xFFFFFFFF;
+      hash = ((hash << 5) - hash + str.charCodeAt(i)) & 0xffffffff;
     }
 
     return hash.toString();
