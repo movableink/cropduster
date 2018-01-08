@@ -1,3 +1,5 @@
+const DEPRECATION_MSG = 'callbacks are deprecated in cropduster, prefer using promises for asynchronous operations';
+
 const CD = {
   CORS_PROXY_SERVER: 'http://cors.movableink.com',
 
@@ -9,6 +11,7 @@ const CD = {
   },
 
   _initParams() {
+    CD._urlParams = {};
     const search = /([^&=]+)=?([^&]*)/g;
     const query = CD._searchString();
 
@@ -24,7 +27,7 @@ const CD = {
   },
 
   params(name) {
-    let params = CD._urlParams || {};
+    let params = CD._urlParams;
     if (typeof params === 'undefined') {
       CD._initParams();
       params = CD._urlParams;
@@ -191,13 +194,10 @@ const CD = {
       options = {};
     }
 
-    const msg = `XHR: ${url}`;
-
+    const msg = `xhr: ${url}`;
     const deprecatedCallback = function() {
       if (callback && typeof callback === 'function') {
-        CD.log(
-          'callbacks are deprecated in cropduster, prefer using promises with asynchronous operations'
-        );
+        CD.log(DEPRECATION_MSG);
         return callback(...arguments);
       }
     };
@@ -247,13 +247,14 @@ const CD = {
       options = {};
     }
 
-    return this.getImagePromise(url, options.maxSuspension).then(
-      image => callback(image),
-      _ => callback(null)
-    );
-  },
+    const deprecatedCallback = function() {
+      if (callback && typeof callback === 'function') {
+        CD.log(DEPRECATION_MSG);
 
-  getImagePromise(url, maxSuspension) {
+        return callback(...arguments);
+      }
+    };
+
     const msg = `getImage: ${url}`;
 
     return new Promise(function(resolve, reject) {
@@ -261,46 +262,48 @@ const CD = {
 
       img.onload = function() {
         CD.resume(msg);
+
+        deprecatedCallback(img);
+
         resolve(img);
       };
 
       img.onerror = function(event) {
         CD.resume(msg);
+
+        deprecatedCallback(null);
+
         reject(event);
       };
 
+      CD.pause(options.maxSuspension, msg);
       img.src = url;
-      CD.pause(maxSuspension, msg);
     });
   },
 
-  getImages(urls, options = {}, afterAll, afterEach) {
+  /**
+   * NOTE: getImages is intended to be used with promises. The `afterAll` callback is
+   * now deprecated, and the order of the afterEach and afterAll arguments has
+   * been reversed since previous versions of cropduster.
+   *
+   * To achieve the same effect, users should pass a single callback into the
+   * arguments for getImages, and then use a `.then` call to handle any actions
+   * after all images have finished loading.
+   *
+   * If any image fails to load, the Promise will reject.
+   */
+  getImages(urls, options = {}, afterEach, afterAll) {
+    const msg = 'getImages:';
+    CD.pause(options.maxSuspension, msg);
+
     if (typeof options === 'function') {
-      afterEach = afterAll;
-      afterAll = options;
+      afterAll = afterEach;
+      afterEach = options;
       options = {};
     }
 
-    return new Promise((resolve, reject) => {
-      return this.getImagesPromise(urls, options.maxSuspension, afterEach).then(
-        images => {
-          if (afterAll) {
-            afterAll(images);
-          }
-
-          resolve(images);
-        },
-        _ => reject(null)
-      );
-    });
-  },
-
-  getImagesPromise(urls, maxSuspension, afterEach) {
-    const msg = 'getImages';
-    CD.pause(maxSuspension, msg);
-
     const promises = urls.map(url => {
-      return this.getImagePromise(url, maxSuspension).then(img => {
+      return this.getImage(url, options.maxSuspension).then(img => {
         if (afterEach) {
           afterEach(img);
         }
@@ -309,10 +312,20 @@ const CD = {
       });
     });
 
-    return Promise.all(promises).then(images => {
-      CD.resume(msg);
-      return images;
-    });
+    return Promise.all(promises).then(
+      images => {
+        if (afterAll) {
+          CD.log(DEPRECATION_MSG);
+          afterAll(images);
+        }
+
+        CD.resume(msg);
+        return images;
+      },
+      _ => {
+        CD.resume(msg);
+        throw new Error('Not all images loaded successfully');
+      });
   },
 
   waitForAsset(assetUrl) {
@@ -333,7 +346,7 @@ const CD = {
     let hash = 0;
     if (str.length === 0) return hash;
 
-    for (const i = 0; i < str.length; i++) {
+    for (let i = 0; i < str.length; i++) {
       hash = ((hash << 5) - hash + str.charCodeAt(i)) & 0xffffffff;
     }
 
