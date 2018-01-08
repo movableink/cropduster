@@ -191,65 +191,54 @@ const CD = {
       options = {};
     }
 
-    return this.getPromise(url, options).then(
-      response => {
-        callback(response.data, response.status, response.contentType);
-        return response;
-      },
-      ({ status }) => {
-        callback(null, status);
-        return null;
+    const msg = `XHR: ${url}`;
+
+    const deprecatedCallback = function() {
+      if (callback && typeof callback === 'function') {
+        CD.log(
+          'callbacks are deprecated in cropduster, prefer using promises with asynchronous operations'
+        );
+        return callback(...arguments);
       }
-    );
-  },
+    };
 
-  getPromise(url, options = {}) {
-    const msg = `xhr: ${url}`;
+    const handleError = error => {
+      CD.log(`Error encountered in CD.get for ${url}: ${error}`);
+      CD.resume(msg);
 
-    return new Promise(function(resolve, reject) {
-      try {
-        const req = new XMLHttpRequest();
+      deprecatedCallback(null);
 
-        req.onerror = function() {
-          CD.resume(msg);
-          CD.log(`XHR error for ${url}`);
+      if (!error instanceof Error) {
+        error = new Error(error);
+      }
 
-          reject({
-            status: this.status,
-            statusText: req.statusText
-          });
-        };
+      throw error;
+    };
 
-        req.onload = function() {
-          CD.resume(msg);
-          const contentType = this.getResponseHeader('content-type');
+    CD.pause(options.maxSuspension || 0, msg);
 
-          resolve({
-            contentType,
-            data: this.responseText,
-            status: this.status
-          });
-        };
+    const requestOptions = CD._optionsForFetch(options);
 
-        req.open(options.method || 'GET', url, true);
-
-        req.withCredentials = true;
-
-        if (options.headers) {
-          for (const header in options.headers) {
-            req.setRequestHeader(header, options.headers[header]);
-          }
+    return fetch(url, requestOptions).then(
+      response => {
+        if (!response.ok) {
+          handleError(response.statusText); // A non-200 range status was returned
         }
 
-        req.send(options.body);
-        CD.pause(options.maxSuspension, msg);
-      } catch (error) {
-        reject({
-          message: `Cropduster failed to create Promise: ${error}`,
-          error: error
-        });
-      }
-    });
+        return response.text().then(data => {
+          deprecatedCallback(data, response.status, response.contentType);
+
+          CD.resume(msg);
+
+          return {
+            data,
+            status,
+            contentType
+          };
+        }, handleError); // The response failed to parse with `.text()`
+      },
+      handleError // A network or CORS error was hit
+    );
   },
 
   getImage(url, options = {}, callback = () => {}) {
