@@ -1,175 +1,181 @@
 const CD = {
-  CORS_PROXY_SERVER : "http://cors.movableink.com",
+  CORS_PROXY_SERVER: 'http://cors.movableink.com',
 
-  $: function(selector, doc) {
-    if(!doc) { doc = document; }
+  $(selector, doc) {
+    if (!doc) {
+      doc = document;
+    }
     return Array.prototype.slice.call(doc.querySelectorAll(selector));
   },
 
-  param: function(name) {
+  _initParams() {
+    CD._urlParams = {};
+    const search = /([^&=]+)=?([^&]*)/g;
+    const query = CD._searchString();
+
+    let match = search.exec(query);
+    while (match) {
+      CD._urlParams[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+      match = search.exec(query);
+    }
+  },
+
+  param(name) {
     return CD.params()[name];
   },
 
-  params: function(name) {
-    if(typeof(CD._urlParams) == "undefined") {
-      CD._urlParams = {};
-      var match;
-      var search = /([^&=]+)=?([^&]*)/g;
-      var query  = CD._searchString();
-      while (match = search.exec(query))
-        CD._urlParams[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+  params(name) {
+    let params = CD._urlParams;
+    if (typeof params === 'undefined') {
+      CD._initParams();
+      params = CD._urlParams;
     }
+
     if (name) {
-      return CD._urlParams[name];
+      return params[name];
     } else {
-      return CD._urlParams;
+      return params;
     }
   },
 
-  _searchString: function() {
+  _searchString() {
     return window.location.search.substring(1);
   },
 
-  autofill: function() {
-    CD.param("init"); // inits CD._urlParams
-    Object.keys(CD._urlParams).forEach(function (key) {
-      if (CD._urlParams[key] !== "undefined" && CD._urlParams[key].length > 0) {
-        if (document.getElementById("autofill_" + key)) {
-          document.getElementById("autofill_" + key).innerHTML = CD._urlParams[key];
+  autofill() {
+    CD.param('init'); // inits CD._urlParams
+    const params = CD._urlParams;
+    for (const key in params) {
+      if (params[key] !== 'undefined' && params[key].length > 0) {
+        if (document.getElementById(`autofill_${key}`)) {
+          document.getElementById(`autofill_${key}`).innerHTML = params[key];
         }
       }
-    });
+    }
   },
 
-  throwError: function(msg) {
-    if(typeof(MICapture) == "undefined") {
-      CD.log("Capturama error: " + msg);
+  throwError(msg) {
+    if (typeof MICapture === 'undefined') {
+      CD.log('Capturama error: ' + msg);
     } else {
       MICapture.error(msg);
     }
   },
 
-  cancelRequest: function(msg) {
-    if(typeof(MICapture) == "undefined") {
-      CD.log("Request canceled: " + msg);
+  cancelRequest(msg) {
+    if (typeof MICapture === 'undefined') {
+      CD.log(`Request canceled: ${msg}`);
     } else {
       MICapture.cancel(msg);
     }
   },
 
-  setImageRedirect: function(imageUrl) {
-    var a = document.querySelector("#mi-redirect-image");
-    a = a || document.createElement('a');
+  setImageRedirect(imageUrl) {
+    const a = document.getElementById('mi-redirect-image') || document.createElement('a');
 
     a.href = imageUrl;
-    a.id = "mi-redirect-image";
-    a.style.display = "none";
+    a.id = 'mi-redirect-image';
+    a.style.display = 'none';
 
     document.body.appendChild(a);
 
     return a;
   },
 
-  setClickthrough: function(url) {
-    var a = document.querySelector("#mi_dynamic_link");
-    a = a || document.createElement('a');
+  setClickthrough(url) {
+    const a = document.getElementById('mi_dynamic_link') || document.createElement('a');
+
     a.href = url;
-    a.id = "mi_dynamic_link";
-    a.style.display = "none";
+    a.id = 'mi_dynamic_link';
+    a.style.display = 'none';
+
     document.body.appendChild(a);
 
     return a;
   },
 
-  setExtraData: function(dataObject) {
-    var el = document.querySelector("#mi-data");
-    el = el || document.createElement('div');
-    el.id = "mi-data";
-    el.style.display = "none";
+  setExtraData(dataObject) {
+    const el = document.getElementById('mi-data') || document.createElement('div');
 
-    var existingData;
+    el.id = 'mi-data';
+    el.style.display = 'none';
+
+    let existingData;
     try {
       existingData = JSON.parse(el.getAttribute('data-mi-data')) || {};
-    } catch(e) {
+    } catch (_) {
       // Overwrite if there was something in mi-data that wasn't JSON
       existingData = {};
     }
 
-    for(var i in dataObject) {
-      if(dataObject.hasOwnProperty(i)) {
-        existingData[i] = dataObject[i];
+    for (const key in dataObject) {
+      if (dataObject.hasOwnProperty(key)) {
+        existingData[key] = dataObject[key];
       }
     }
+
     el.setAttribute('data-mi-data', JSON.stringify(existingData));
     document.body.appendChild(el);
 
     return el;
   },
 
-  proxyUrl: function(url) {
-    var a = document.createElement('a');
-    var port = "";
+  proxyUrl(url) {
+    const a = document.createElement('a');
     a.href = url;
 
-    if (a.port === '0' || a.port === "") {
-      port = a.protocol == "https:" ? ":443" : "";
+    let port = '';
+    if (a.port === '0' || a.port === '') {
+      port = a.protocol === 'https:' ? ':443' : '';
     } else {
-      port = ":" + a.port;
+      port = `:${a.port}`;
     }
 
-    return [
-      CD.CORS_PROXY_SERVER,
-      "/",
-      a.hostname,
-      port,
-      a.pathname,
-      a.search,
-      a.hash
-    ].join("");
+    const { hostname, pathname, search, hash } = a;
+    return `${CD.CORS_PROXY_SERVER}/${hostname}${port}${pathname}${search}${hash}`;
   },
 
   // internal, do not modify
   _readyToCapture: true,
 
-  _reset: function() {
+  _reset() {
     CD._readyToCapture = true;
   },
 
-  pause: function(maxSuspension, msg) {
-    msg = msg || "manual suspension";
+  pause(maxSuspension, msg) {
+    msg = msg || 'manual suspension';
 
-    if(maxSuspension) {
-      msg += ", will end in " + maxSuspension + "ms";
+    if (maxSuspension) {
+      msg += `, will end in ${maxSuspension}ms`;
 
-      setTimeout(function() {
+      setTimeout(() => {
         MICapture.resume(msg);
       }, maxSuspension);
     }
 
-    if (typeof(MICapture) == 'undefined') {
-      CD.log("paused: " + msg);
+    if (typeof MICapture === 'undefined') {
+      CD.log(`paused: ${msg}`);
     } else {
       MICapture.pause(msg);
     }
   },
 
-  resume: function(msg) {
-    if(typeof MICapture === 'undefined') {
-      CD.log("resuming paused capture: " + msg);
+  resume(msg) {
+    if (typeof MICapture === 'undefined') {
+      CD.log(`resuming paused capture: ${msg}`);
     } else {
       MICapture.resume(msg);
     }
   },
 
-  getCORS: function(url, options, callback) {
-    var args = Array.prototype.slice.call(arguments);
-
-    url = args[0];
-    callback = args.pop();
-    options = args[1] || {};
+  getCORS(url, options = {}, callback = () => {}) {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
 
     options.corsCacheTime = options.corsCacheTime || 10 * 1000;
-    if(!url.match(/cors.movableink.com/)) {
+    if (!/cors.movableink.com/.test(url)) {
       url = CD.proxyUrl(url);
     }
 
@@ -180,17 +186,14 @@ const CD = {
     return CD.get(url, options, callback);
   },
 
-  get: function(url, options, callback) {
-    const args = Array.prototype.slice.call(arguments);
-
-    url = args[0];
+  get(url, options = {}, callback = () => {}) {
     if (typeof options === 'function') {
-      options = args[1] || {};
       callback = options;
+      options = {};
     }
 
     return this.getPromise(url, options).then(
-      (response) => {
+      response => {
         callback(response.data, response.status, response.contentType);
         return response;
       },
@@ -201,17 +204,16 @@ const CD = {
     );
   },
 
-  getPromise: function(url, options) {
-    options = options || {};
-    const msg = "xhr: " + url;
+  getPromise(url, options = {}) {
+    const msg = `xhr: ${url}`;
 
     return new Promise(function(resolve, reject) {
       try {
         const req = new XMLHttpRequest();
 
-        req.onerror = function () {
+        req.onerror = function() {
           CD.resume(msg);
-          CD.log("XHR error for " + url);
+          CD.log(`XHR error for ${url}`);
 
           reject({
             status: this.status,
@@ -226,7 +228,7 @@ const CD = {
           resolve({
             contentType,
             data: this.responseText,
-            status: this.status,
+            status: this.status
           });
         };
 
@@ -234,8 +236,8 @@ const CD = {
 
         req.withCredentials = true;
 
-        if(options.headers) {
-          for(const header in options.headers) {
+        if (options.headers) {
+          for (const header in options.headers) {
             req.setRequestHeader(header, options.headers[header]);
           }
         }
@@ -251,12 +253,11 @@ const CD = {
     });
   },
 
-  getImage(url, options, callback) {
-    const args = Array.prototype.slice.call(arguments);
-
-    callback = args.pop();
-    url = args[0];
-    options = args[1] || {};
+  getImage(url, options = {}, callback = () => {}) {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
 
     return this.getImagePromise(url, options.maxSuspension).then(
       image => callback(image),
@@ -265,7 +266,7 @@ const CD = {
   },
 
   getImagePromise(url, maxSuspension) {
-    const msg = "getImage: " + url;
+    const msg = `getImage: ${url}`;
 
     return new Promise(function(resolve, reject) {
       const img = new Image();
@@ -285,18 +286,16 @@ const CD = {
     });
   },
 
-  getImages(urls, options, afterAll, afterEach) {
-    if(typeof(options) === "function") {
+  getImages(urls, options = {}, afterAll, afterEach) {
+    if (typeof options === 'function') {
       afterEach = afterAll;
       afterAll = options;
       options = {};
     }
 
-    options = options || {};
-
     return new Promise((resolve, reject) => {
       return this.getImagesPromise(urls, options.maxSuspension, afterEach).then(
-        (images) => {
+        images => {
           if (afterAll) {
             afterAll(images);
           }
@@ -312,41 +311,44 @@ const CD = {
     const msg = 'getImages';
     CD.pause(maxSuspension, msg);
 
-    const promises = urls.map((url) => {
-      return this.getImagePromise(url, maxSuspension).then((img) => {
+    const promises = urls.map(url => {
+      return this.getImagePromise(url, maxSuspension).then(img => {
         if (afterEach) {
           afterEach(img);
         }
 
         return img;
-      })
+      });
     });
 
-    return Promise.all(promises).then((images) => {
+    return Promise.all(promises).then(images => {
       CD.resume(msg);
       return images;
     });
   },
 
-  waitForAsset: function(assetUrl) {
-    if(typeof MICapture === "undefined") {
-      CD.log("Wait for asset: " + assetUrl);
+  waitForAsset(assetUrl) {
+    if (typeof MICapture === 'undefined') {
+      CD.log(`Wait for asset: ${assetUrl}`);
     } else {
       MICapture.waitForAsset(assetUrl);
     }
   },
 
-  log: function(message) {
+  log(message) {
     console.log(message);
   },
 
-  _hashForRequest: function(url, options) {
-    var str = url + JSON.stringify(options);
-    var hash = 0;
+  _hashForRequest(url, options) {
+    const str = `${url}${JSON.stringify(options)}`;
+
+    let hash = 0;
     if (str.length === 0) return hash;
-    for (var i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i) & 0xFFFFFFFF;
+
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash + str.charCodeAt(i)) & 0xffffffff;
     }
+
     return hash.toString();
   }
 };

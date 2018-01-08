@@ -10,12 +10,7 @@ const defaultConfig = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['babel-preset-env']
-          }
-        }
+        use: ['babel-loader']
       }
     ]
   }
@@ -26,7 +21,7 @@ const importConfig = {
     library: 'cropduster',
     libraryTarget: 'umd',
     filename: 'cropduster.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist')
   },
   ...defaultConfig
 };
@@ -34,7 +29,7 @@ const importConfig = {
 const browserConfig = {
   output: {
     library: 'CD',
-    libraryTarget: 'window',
+    libraryTarget: 'var',
     filename: 'cropduster.browser.js',
     path: path.resolve(__dirname, 'dist')
   },
