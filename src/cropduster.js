@@ -9,6 +9,7 @@ const CD = {
   },
 
   _initParams() {
+    CD._urlParams = {};
     const search = /([^&=]+)=?([^&]*)/g;
     const query = CD._searchString();
 
@@ -24,7 +25,7 @@ const CD = {
   },
 
   params(name) {
-    let params = CD._urlParams || {};
+    let params = CD._urlParams;
     if (typeof params === 'undefined') {
       CD._initParams();
       params = CD._urlParams;
