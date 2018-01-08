@@ -226,7 +226,10 @@ const CD = {
         }
 
         return response.text().then(data => {
-          deprecatedCallback(data, response.status, response.contentType);
+          const status = response.status;
+          const contentType = response.headers.get('Content-Type');
+
+          deprecatedCallback(data, status, contentType);
 
           CD.resume(msg);
 
@@ -351,6 +354,17 @@ const CD = {
     }
 
     return hash.toString();
+  },
+
+  _optionsForFetch(options) {
+    return {
+      credentials: 'include',
+      redirect: 'follow',
+      headers: new Headers(options.headers || {}),
+      method: options.method || 'GET',
+      body: options.body,
+      mode: 'cors'
+    };
   }
 };
 
