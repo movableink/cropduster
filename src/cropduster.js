@@ -6,26 +6,32 @@ const CD = {
     return Array.prototype.slice.call(doc.querySelectorAll(selector));
   },
 
+  _initParams() {
+    const search = /([^&=]+)=?([^&]*)/g;
+    const query = CD._searchString();
+
+    let match = search.exec(query);
+    while (match) {
+      CD._urlParams[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+      match = search.exec(query);
+    }
+  },
+
   param(name) {
     return CD.params()[name];
   },
 
   params(name) {
-    if (typeof CD._urlParams  === 'undefined') {
-      CD._urlParams = {};
-      const search = /([^&=]+)=?([^&]*)/g;
-      const query  = CD._searchString();
-      let match = search.exec(query);
-      while (match) {
-        CD._urlParams[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
-        match = search.exec(query);
-      }
+    let params = CD._urlParams || {};
+    if (typeof params === 'undefined') {
+      CD._initParams();
+      params = CD._urlParams;
     }
 
     if (name) {
-      return CD._urlParams[name];
+      return params[name];
     } else {
-      return CD._urlParams;
+      return params;
     }
   },
 
