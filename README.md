@@ -21,9 +21,14 @@ import CD from 'cropduster';
 
 ## Legacy Installation
 
-If you are unable to use es6, you can find an es5 version at
+To use Cropduster directly in the browser, loaded from a script tag, you can
+find legacy versions at:
 
 http://projects.movableink.com/production/libs/cropduster.[version].js
+
+Going forward, browser-ready versions of the library are available at:
+
+http://projects.movableink.com/production/libs/cropduster.browser.[version].js
 
 Where you replace `[version]` with the version you want to use.
 
@@ -36,9 +41,18 @@ Where you replace `[version]` with the version you want to use.
 Example:
 
 ```javascript
-var elements = CD.$('div.items');
-for(var i = 0; i < elements.length; i++) {
-  var element = elements[i];
+const elements = CD.$('div.items');
+for (let i = 0; i < elements.length; i++) {
+  const element = elements[i];
+  element.style.display = 'none';
+}
+```
+
+or:
+
+```javascript
+const elements = CD.$('div.items');
+for (const element of elements) {
   element.style.display = 'none';
 }
 ```
@@ -51,7 +65,7 @@ Example:
 
 ```javascript
 // document.location is 'http://example.com/?fname=john
-var fname = CD.param('fname');
+const fname = CD.param('fname');
 console.log(fname); // logs 'john'
 ```
 
@@ -65,7 +79,8 @@ until the request completes. Note: the URL has to be CORS-accessible, see `CD.ge
 Example:
 
 ```javascript
-CD.get('http://cors-enabled-site.com/page', function(data, status) {
+CD.get('http://cors-enabled-site.com/page').then((response) => {
+  const { data, status, contentType } = response;
   CD.$('h1')[0].innerHTML = data.header;
 });
 ```
@@ -79,8 +94,8 @@ CD.get('http://cors-enabled-site.com/page', {
   headers: {
     'Accept': 'application/json'
   }
-}, function(data, status) {
-  CD.$('h1')[0].innerHTML = data.h1;
+}).then((response) {
+  CD.$('h1')[0].innerHTML = response.data.h1;
 })
 ```
 
@@ -94,8 +109,8 @@ page.
 Example:
 
 ```javascript
-CD.getCORS('http://example.com/page', function(data, status) {
-  CD.$('h1')[0].innerHTML = data.header;
+CD.getCORS('http://example.com/page').then((response) {
+  CD.$('h1')[0].innerHTML = response.data.header;
 });
 ```
 
@@ -162,9 +177,10 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
-### 4.2.0
-  * Compiles the app with Webpack
+### 5.0.0
+  * Compiles the app with Webpack and Babel down to ES5 with sourcemaps.
   * Returns Promises from CD.get, CD.getCORS, CD.getImage and CD.getImages
+  * NPM publishes the browser-ready script in dist/cropduster.browser.js
 
 ### 4.1.0
   * Add `withCredentials: true` to all `CD.get()` requests.
