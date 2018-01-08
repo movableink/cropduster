@@ -134,7 +134,7 @@ test("CD.resume", function(assert) {
   assert.equal(MICapture.resume.calledOnce, true, "calls MICapture.resume");
 });
 
-test("CD.getImage load success", function(assert) {
+test("DEPRECATED - CD.getImage with a callback and successful load", function(assert) {
   const done = assert.async();
   window.Image = imageSuccessStub;
   const src = "http://example.com/foo.png";
@@ -144,50 +144,54 @@ test("CD.getImage load success", function(assert) {
   });
 });
 
-test("CD.getImage load failure", function(assert) {
+test("CD.getImage with a promise and successful load", function(assert) {
+  const done = assert.async();
+  window.Image = imageSuccessStub;
+  const src = "http://example.com/foo.png";
+  CD.getImage(src).then((img) => {
+    assert.equal(img.src, src, "called with src");
+    done();
+  });
+});
+
+test("DEPRECATED - CD.getImage with a callback and a failing load", function(assert) {
   const done = assert.async();
   window.Image = imageFailureStub;
   const src = "http://example.com/foo.png";
   CD.getImage(src, function(img) {
     assert.equal(img, null, "called with null");
     done();
-  });
+  }).catch(() => {});
 });
 
-test("CD.getImages without callback", function(assert) {
-  assert.expect(0);
-
-  window.Image = imageSuccessStub;
-  const srcA = "http://example.com/foo.png";
-  const srcB = "http://example.com/bar.png";
-  CD.getImages([srcA, srcB]);
-});
-
-test("CD.getImages with callback", function(assert) {
+test("CD.getImage with a promise and a failing load", function(assert) {
   const done = assert.async();
-  window.Image = imageSuccessStub;
-  const srcA = "http://example.com/foo.png";
-  const srcB = "http://example.com/bar.png";
-  const cb = spy();
-  CD.getImages([srcA, srcB], cb).then(() => {
-    assert.ok(cb.calledOnce);
-    assert.equal(cb.firstCall.args[0].length, 2);
-    done();
-  });
+  window.Image = imageFailureStub;
+  const src = "http://example.com/foo.png";
+  CD.getImage(src).then(
+    () => {
+      assert.ok(false, 'this function should never be called');
+      done();
+    },
+    (error) => {
+      assert.ok(true, 'the promise rejects if the image fails to load');
+      done();
+    }
+  );
 });
 
 test("CD.waitForAsset", function(assert) {
   assert.equal(CD.waitForAsset('http://example.com/foo.png'), undefined);
 });
 
-test("CD.getImages with callback and single image callback", function(assert) {
+test("DEPRECATED - CD.getImages with final callback and single image callback", function(assert) {
   const done = assert.async();
   window.Image = imageSuccessStub;
   const srcA = "http://example.com/foo.png";
   const srcB = "http://example.com/bar.png";
   const cb = spy();
   const singleCb = spy();
-  CD.getImages([srcA, srcB], cb, singleCb).then(() => {
+  CD.getImages([srcA, srcB], singleCb, cb).then(() => {
     assert.ok(cb.calledOnce, "callback is called only once");
     assert.equal(cb.firstCall.args[0].length, 2, "called with both images");
 
@@ -199,41 +203,83 @@ test("CD.getImages with callback and single image callback", function(assert) {
   });
 });
 
-test("CD.get with response", function(assert) {
+test("CD.getImages with promises and a single callback", function(assert) {
+  const done = assert.async();
+  window.Image = imageSuccessStub;
+  const srcA = "http://example.com/foo.png";
+  const srcB = "http://example.com/bar.png";
+  const singleCb = spy();
+  CD.getImages([srcA, srcB], singleCb).then((images) => {
+    assert.ok(singleCb.calledTwice, "the single callback is called once for each resolved image");
+    assert.ok(true, "the promise is resolved if all images resolve");
+    assert.equal(images.length, 2, "called with both images");
+
+    assert.equal(singleCb.firstCall.args[0].src, srcA, "first image called first");
+    assert.equal(singleCb.secondCall.args[0].src, srcB, "last image called last");
+
+    done();
+  });
+});
+
+test("DEPRECATED - CD.get with callbacks and a successful response", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
   const done = assert.async();
   const server = fakeServer.create();
 
   server.respondWith([200, {"Content-Type": "text/html"}, "response"]);
 
-  const cb = spy();
-
   CD.get("http://google.com", {
     headers: {
       'Accept': 'application/json'
     }
-  }, cb).then(() => {
-    assert.ok(cb.calledWith('response'), 'calls the callback with a response');
+  }, (data, status, contentType) => {
+    assert.ok(data === 'response', 'resolves with a response');
+    assert.ok(status === 200, 'resolves with a status');
+    assert.ok(contentType === 'text/html', 'resolves with a content type');
+
+    assert.ok(true, 'the promise resolves successfully');
     done();
   });
 
   server.respond();
-
-
   server.restore();
 });
 
-test("CD.get with a failing response", function(assert) {
-  const server = fakeServer.create();
+test("CD.get with promises and a successful response", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
   const done = assert.async();
+  const server = fakeServer.create();
 
-  const cb = spy();
+  server.respondWith([200, {"Content-Type": "text/html"}, "response"]);
 
   CD.get("http://google.com", {
     headers: {
       'Accept': 'application/json'
     }
-  }, cb).then(() => {
-    assert.ok(cb.calledWith(null), 'calls the callback with a response');
+  }).then(({ data, status, contentType }) => {
+    assert.ok(data === 'response', 'resolves with a response');
+    assert.ok(status === 200, 'resolves with a status');
+    assert.ok(contentType === 'text/html', 'resolves with a content type');
+
+    assert.ok(true, 'the promise resolves successfully');
+    done();
+  });
+
+  server.respond();
+  server.restore();
+});
+
+test("DEPRECATED - CD.get with callbacks and a failing response", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const server = fakeServer.create();
+  const done = assert.async();
+
+  CD.get("http://google.com", {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }, (value) => {
+    assert.equal(value, null, 'the callback is called with null if the request fails');
     done();
   });
 
@@ -243,22 +289,46 @@ test("CD.get with a failing response", function(assert) {
   server.restore();
 });
 
+test("CD.get with promises and a failing response", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const server = fakeServer.create();
+  const done = assert.async();
 
-test("CD.get", function(assert) {
+  CD.get("http://google.com", {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }).then(
+    () => {
+      assert.ok(false, 'this should never be reached');
+      done();
+    },
+    () => {
+      assert.ok(true, 'the promise is rejected if the request fails');
+      done();
+    }
+  );
+
+  server.requests[0].abort();
+  server.requests[0].onerror();
+
+  server.restore();
+});
+
+
+test("CD.get - request options", function(assert) {
   const xhr = useFakeXMLHttpRequest();
   const requests = this.requests = [];
   xhr.onCreate = function (xhr) {
     requests.push(xhr);
   };
 
-  const cb = spy();
-
   CD.get("http://google.com", {
     corsCacheTime: 5000,
     headers: {
       'Accept': 'application/json'
     }
-  }, cb);
+  });
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], null); // not automatically added
@@ -271,21 +341,19 @@ test("CD.get", function(assert) {
   xhr.restore();
 });
 
-test("CD.getCORS", function(assert) {
+test("CD.getCORS - request options", function(assert) {
   const xhr = useFakeXMLHttpRequest();
   const requests = this.requests = [];
   xhr.onCreate = function (xhr) {
     requests.push(xhr);
   };
 
-  const cb = spy();
-
   CD.getCORS("http://google.com", {
     corsCacheTime: 5000,
     headers: {
       'Accept': 'application/json'
     }
-  }, cb);
+  });
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
@@ -305,7 +373,7 @@ test("CD.getCORS without options", function(assert) {
     requests.push(xhr);
   };
 
-  CD.getCORS("http://google.com", () => {});
+  CD.getCORS("http://google.com");
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 10);
@@ -329,7 +397,7 @@ test("CD.getCORS with POST", function(assert) {
     headers: {
       'Accept': 'application/json'
     }
-  }, () => {});
+  });
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
