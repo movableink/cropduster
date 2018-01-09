@@ -94,7 +94,7 @@ CD.get('http://cors-enabled-site.com/page', {
   headers: {
     'Accept': 'application/json'
   }
-}).then((response) {
+}).then((response) => {
   CD.$('h1')[0].innerHTML = response.data.h1;
 })
 ```
@@ -109,7 +109,7 @@ page.
 Example:
 
 ```javascript
-CD.getCORS('http://example.com/page').then((response) {
+CD.getCORS('http://example.com/page').then((response) => {
   CD.$('h1')[0].innerHTML = response.data.header;
 });
 ```
