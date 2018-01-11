@@ -1,10 +1,10 @@
 import CD from '../src/cropduster';
-import jQuery from 'jquery';
 import { fakeServer, useFakeXMLHttpRequest, spy } from 'sinon';
 
 const { module, test } = QUnit;
-
-const container = jQuery("<div style='position: absolute; left: -5000px;'></div>").appendTo('body');
+const container = document.createElement('DIV');
+container.style = 'position: absolute; left: -5000px;';
+document.body.appendChild(container);
 
 module('cropduster tests', {
   beforeEach() {
@@ -63,41 +63,44 @@ test("CD.params with argument returns that query param", function(assert) {
 // can't test CD.param returning query params from here, unfortunately...
 
 test("CD.autofill", function(assert) {
-  container.html('');
-  const el = jQuery("<div id='autofill_foo'></div>");
+  container.innerHTML = '';
+  const el = document.createElement('div');
+  el.id = 'autofill_foo';
   container.append(el);
 
   CD.autofill();
-  assert.equal(el.html(), 'bar', "auto-fills the query param into the element");
+  assert.equal(el.innerHTML, 'bar', "auto-fills the query param into the element");
 });
 
 test("CD.setImageRedirect", function(assert) {
   CD.setImageRedirect("http://example.com/foo.png");
 
-  assert.equal(jQuery("#mi-redirect-image").attr('href'), "http://example.com/foo.png",
-        "sets the image redirect");
+  const href = document.getElementById('mi-redirect-image').getAttribute('href');
+  assert.equal(href, "http://example.com/foo.png", "sets the image redirect");
 });
 
 test("CD.setImageRedirect multiple times", function(assert) {
   CD.setImageRedirect("http://example.com/foo.png");
   CD.setImageRedirect("http://example.com/bar.png");
 
-  assert.equal(jQuery("#mi-redirect-image").attr('href'), "http://example.com/bar.png",
-        "uses the last setImageRedirect url");
+  const href = document.getElementById('mi-redirect-image').getAttribute('href');
+  assert.equal(href, "http://example.com/bar.png", "uses the last setImageRedirect url");
 });
 
 test("CD.setClickthrough", function(assert) {
+
   CD.setClickthrough("http://example.com/");
 
-  assert.equal(jQuery("#mi_dynamic_link").attr('href'), "http://example.com/",
+  const href = document.getElementById('mi_dynamic_link').getAttribute('href');
+  assert.equal(href, "http://example.com/",
         "sets the dynamic link");
 });
 
 test("CD.setExtraData with no existing data", function(assert) {
   CD.setExtraData({foo: 'bar'});
 
-  assert.equal(jQuery("#mi-data").attr('data-mi-data'), '{"foo":"bar"}',
-        "sets the data in json");
+  const data = document.getElementById('mi-data').getAttribute('data-mi-data');
+  assert.equal(data, '{"foo":"bar"}', "sets the data in json");
 });
 
 test("CD.setExtraData with existing data", function(assert) {
@@ -105,7 +108,8 @@ test("CD.setExtraData with existing data", function(assert) {
   CD.setExtraData({foo: 'baz'});
   CD.setExtraData({my: 'data'});
 
-  assert.equal(jQuery("#mi-data").attr('data-mi-data'), '{"foo":"baz","my":"data"}',
+  const data = document.getElementById('mi-data').getAttribute('data-mi-data');
+  assert.equal(data, '{"foo":"baz","my":"data"}',
         "sets the data in json");
 });
 
