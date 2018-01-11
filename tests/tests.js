@@ -281,6 +281,9 @@ test("DEPRECATED - CD.get with callbacks and a failing response", function(asser
   }, (value) => {
     assert.equal(value, null, 'the callback is called with null if the request fails');
     done();
+  }).catch(() => {
+    // do nothing
+    // silence "Uncaught Promise rejection" error that gets thrown here
   });
 
   server.requests[0].abort();
@@ -430,4 +433,25 @@ test("CD.cancelRequest", function(assert) {
 test("CD.throwError", function(assert) {
   CD.throwError();
   assert.ok(MICapture.error.calledOnce);
+});
+
+test('CD.miCaptureFallback - with MICapture', function(assert) {
+  window.MICapture = {};
+
+  assert.expect(1);
+
+  CD.miCaptureFallback(
+    () => { assert.ok(true, 'the second callback is called if MICapture is defined as an object'); },
+    () => { assert.ok(false, 'this should not be called'); }
+  );
+});
+
+test('CD.miCaptureFallback - without MICapture', function(assert) {
+  window.MICapture = null;
+  assert.expect(1);
+
+  CD.miCaptureFallback(
+    () => { assert.ok(false, 'this should not be called'); },
+    () => { assert.ok(true, 'the second callback is called if MICapture is undefined'); }
+  );
 });
