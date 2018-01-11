@@ -203,24 +203,25 @@ const CD = {
         const req = new XMLHttpRequest();
 
         req.onerror = function() {
-          const statusText = this.statusText;
+          const error = `XHR error for ${url} - ${this.status}: ${this.statusText}`;
+
           CD.resume(msg);
-          CD.log(`XHR error for ${url} - ${status}: ${statusText}`);
 
           deprecatedCallback(null);
 
-          reject({
-            status,
-            statusText
-          });
+          throw new Error(error);
         };
 
         req.onload = function() {
-          CD.resume(msg);
-
           const contentType = this.getResponseHeader('content-type');
           const data = this.responseText;
           const status = this.status;
+
+          if (status >= 400) {
+            return this.onerror();
+          }
+
+          CD.resume(msg);
 
           deprecatedCallback(data, status, contentType);
 
