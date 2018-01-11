@@ -48,7 +48,7 @@ If you are using the Cropduster API for common asynchronous actions like
 fetching a URL or an image with `CD.get` and `CD.getImage`, or if you are using
 Promises directly, you do not need to manually call pause and resume. These
 methods are used internally in the necessary places. However, if you are
-doing something unusual that requires work to be delayed, each call to
+doing something unusual that requires work to be delayed manually, each call to
 `CD.pause` must have a corresponding call to `CD.resume`, or the request to
 Capturama will eventually time out.
 
@@ -66,7 +66,7 @@ if (customerQuality === 'very-good') {
   setTimeout(() => {
     target.innerText = 'bad customers have to wait for their images';
     CD.resume();
-  }, tenSeconds);
+  }, 1000);
 }
 ```
 
