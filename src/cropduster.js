@@ -209,7 +209,7 @@ const CD = {
 
           deprecatedCallback(null);
 
-          throw new Error(error);
+          reject(new Error(error));
         };
 
         req.onload = function() {
@@ -354,7 +354,7 @@ const CD = {
   },
 
   miCaptureFallback(ifCapturama, ifBrowser) {
-    const loadedInCapturama = !!MICapture && typeof MICapture === 'object';
+    const loadedInCapturama = !!window.MICapture && typeof window.MICapture === 'object';
     return loadedInCapturama ? ifCapturama() : ifBrowser();
   },
 
