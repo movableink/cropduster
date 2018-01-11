@@ -9,7 +9,6 @@
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
-    "babel-plugin-add-module-exports": "^0.2.1",
     "babel-preset-env": "^1.6.1",
     "karma": "^1.7.1",
     "karma-babel-preprocessor": "^6.0.1",
