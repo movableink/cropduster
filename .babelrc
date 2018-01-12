@@ -1,4 +1,9 @@
 {
-  "presets": ["es2015"],
-  "compact": false
+  "presets":[
+    ["env", {
+      "targets": {
+        "safari": "10"
+      }
+    }]
+  ]
 }
