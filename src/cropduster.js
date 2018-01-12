@@ -1,189 +1,178 @@
-const CD = {
-  CORS_PROXY_SERVER : "http://cors.movableink.com",
+const DEPRECATION_MSG = 'callbacks are deprecated in cropduster, prefer using promises for asynchronous operations';
 
-  $: function(selector, doc) {
-    if(!doc) { doc = document; }
-    return Array.prototype.slice.call(doc.querySelectorAll(selector));
+const CD = {
+  CORS_PROXY_SERVER: 'http://cors.movableink.com',
+
+  $(selector, doc) {
+    if (!doc) {
+      doc = document;
+    }
+
+    return [...doc.querySelectorAll(selector)];
   },
 
-  param: function(name) {
+  _initParams() {
+    CD._urlParams = {};
+    const search = /([^&=]+)=?([^&]*)/g;
+    const query = CD._searchString();
+
+    let match = search.exec(query);
+    while (match) {
+      CD._urlParams[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+      match = search.exec(query);
+    }
+  },
+
+  param(name) {
     return CD.params()[name];
   },
 
-  params: function(name) {
-    if(typeof(CD._urlParams) == "undefined") {
-      CD._urlParams = {};
-      var match;
-      var search = /([^&=]+)=?([^&]*)/g;
-      var query  = CD._searchString();
-      while (match = search.exec(query))
-        CD._urlParams[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+  params(name) {
+    let params = CD._urlParams;
+    if (typeof params === 'undefined') {
+      CD._initParams();
+      params = CD._urlParams;
     }
+
     if (name) {
-      return CD._urlParams[name];
+      return params[name];
     } else {
-      return CD._urlParams;
+      return params;
     }
   },
 
-  _searchString: function() {
+  _searchString() {
     return window.location.search.substring(1);
   },
 
-  autofill: function() {
-    CD.param("init"); // inits CD._urlParams
-    Object.keys(CD._urlParams).forEach(function (key) {
-      if (CD._urlParams[key] !== "undefined" && CD._urlParams[key].length > 0) {
-        if (document.getElementById("autofill_" + key)) {
-          document.getElementById("autofill_" + key).innerHTML = CD._urlParams[key];
+  autofill() {
+    CD.param('init'); // inits CD._urlParams
+    const params = CD._urlParams;
+    for (const key in params) {
+      if (params[key] !== 'undefined' && params[key].length > 0) {
+        if (document.getElementById(`autofill_${key}`)) {
+          document.getElementById(`autofill_${key}`).innerHTML = params[key];
         }
       }
-    });
-  },
-
-  throwError: function(msg) {
-    if(typeof(MICapture) == "undefined") {
-      CD.log("Capturama error: " + msg);
-    } else {
-      MICapture.error(msg);
     }
   },
 
-  cancelRequest: function(msg) {
-    if(typeof(MICapture) == "undefined") {
-      CD.log("Request canceled: " + msg);
-    } else {
-      MICapture.cancel(msg);
-    }
+  throwError(msg) {
+    CD.miCaptureFallback(
+      () => { MICapture.error(msg); },
+      () => { CD.log('Capturama error: ' + msg) }
+    );
   },
 
-  setImageRedirect: function(imageUrl) {
-    var a = document.querySelector("#mi-redirect-image");
-    a = a || document.createElement('a');
+  cancelRequest(msg) {
+    CD.miCaptureFallback(
+      () => { MICapture.cancel(msg); },
+      () => { CD.log(`Request canceled: ${msg}`); }
+    );
+  },
+
+  setImageRedirect(imageUrl) {
+    const a = document.getElementById('mi-redirect-image') || document.createElement('a');
 
     a.href = imageUrl;
-    a.id = "mi-redirect-image";
-    a.style.display = "none";
+    a.id = 'mi-redirect-image';
+    a.style.display = 'none';
 
     document.body.appendChild(a);
 
     return a;
   },
 
-  setClickthrough: function(url) {
-    var a = document.querySelector("#mi_dynamic_link");
-    a = a || document.createElement('a');
+  setClickthrough(url) {
+    const a = document.getElementById('mi_dynamic_link') || document.createElement('a');
+
     a.href = url;
-    a.id = "mi_dynamic_link";
-    a.style.display = "none";
+    a.id = 'mi_dynamic_link';
+    a.style.display = 'none';
+
     document.body.appendChild(a);
 
     return a;
   },
 
-  setExtraData: function(dataObject) {
-    var el = document.querySelector("#mi-data");
-    el = el || document.createElement('div');
-    el.id = "mi-data";
-    el.style.display = "none";
+  setExtraData(dataObject) {
+    const el = document.getElementById('mi-data') || document.createElement('div');
 
-    var existingData;
+    el.id = 'mi-data';
+    el.style.display = 'none';
+
+    let existingData;
     try {
       existingData = JSON.parse(el.getAttribute('data-mi-data')) || {};
-    } catch(e) {
+    } catch (_) {
       // Overwrite if there was something in mi-data that wasn't JSON
       existingData = {};
     }
 
-    for(var i in dataObject) {
-      if(dataObject.hasOwnProperty(i)) {
-        existingData[i] = dataObject[i];
+    for (const key in dataObject) {
+      if (dataObject.hasOwnProperty(key)) {
+        existingData[key] = dataObject[key];
       }
     }
+
     el.setAttribute('data-mi-data', JSON.stringify(existingData));
     document.body.appendChild(el);
 
     return el;
   },
 
-  proxyUrl: function(url) {
-    var a = document.createElement('a');
-    var port = "";
+  proxyUrl(url) {
+    const a = document.createElement('a');
     a.href = url;
 
-    if (a.port === '0' || a.port === "") {
-      port = a.protocol == "https:" ? ":443" : "";
+    let port = '';
+    if (a.port === '0' || a.port === '') {
+      port = a.protocol === 'https:' ? ':443' : '';
     } else {
-      port = ":" + a.port;
+      port = `:${a.port}`;
     }
 
-    return [
-      CD.CORS_PROXY_SERVER,
-      "/",
-      a.hostname,
-      port,
-      a.pathname,
-      a.search,
-      a.hash
-    ].join("");
+    const { hostname, pathname, search, hash } = a;
+    return `${CD.CORS_PROXY_SERVER}/${hostname}${port}${pathname}${search}${hash}`;
   },
 
   // internal, do not modify
   _readyToCapture: true,
 
-  _openCalls: 0,
-
-  _reset: function() {
-    CD._openCalls = 0;
+  _reset() {
     CD._readyToCapture = true;
   },
 
-  suspend: function(maxSuspension, msg) {
-    msg = msg || "manual suspension";
+  pause(maxSuspension, msg = 'manual suspension') {
+    if (maxSuspension) {
+      msg += `, will end in ${maxSuspension}ms`;
 
-    if(maxSuspension) {
-      msg += ", will end in " + maxSuspension + "ms";
-
-      setTimeout(function() {
-        CD.capture(msg);
+      setTimeout(() => {
+        CD.resume(msg);
       }, maxSuspension);
     }
 
-    CD._openCalls++;
-    CD._readyToCapture = false;
-    if (typeof(MICapture) == 'undefined') {
-      CD.log("suspended: " + msg);
-    } else {
-      MICapture.begin(msg);
-    }
+    CD.miCaptureFallback(
+      () => { MICapture.pause(msg) },
+      () => { CD.log(`paused: ${msg}`) }
+    );
   },
 
-  capture: function(msg) {
-    CD._openCalls--;
-
-    if(CD._openCalls > 0) {
-      CD.log("outstanding calls, not capturing: " + msg);
-      return;
-    }
-
-    CD._readyToCapture = true;
-    if(typeof(MICapture) == 'undefined') {
-      CD.log("now ready to capture: " + msg);
-    } else {
-      CD.$('body')[0].style.width = CD.$('body')[0].offsetWidth + 'px';
-      MICapture.end(msg);
-    }
+  resume(msg) {
+    CD.miCaptureFallback(
+      () => { MICapture.resume(msg) },
+      () => { CD.log(`resuming paused capture: ${msg}`)}
+    );
   },
 
-  getCORS: function(url, options, callback) {
-    var args = Array.prototype.slice.call(arguments);
-
-    url = args[0];
-    callback = args.pop();
-    options = args[1] || {};
+  getCORS(url, options = {}, callback) {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
 
     options.corsCacheTime = options.corsCacheTime || 10 * 1000;
-    if(!url.match(/cors.movableink.com/)) {
+    if (!/cors.movableink.com/.test(url)) {
       url = CD.proxyUrl(url);
     }
 
@@ -194,140 +183,191 @@ const CD = {
     return CD.get(url, options, callback);
   },
 
-  get: function(url, options, callback) {
-    var args = Array.prototype.slice.call(arguments);
-
-    url = args[0];
-    callback = args.pop();
-    options = args[1] || {};
-
-    var msg = "xhr: " + url;
-
-    var req = new XMLHttpRequest();
-
-    req.onerror = function () {
-      CD.capture(msg);
-      CD.log("XHR error for " + url);
-      callback(null, this.status);
-    };
-    req.onload = function() {
-      CD.capture(msg);
-      var contentType = this.getResponseHeader('content-type');
-      callback(this.responseText, this.status, contentType);
-    };
-
-    req.open(options.method || 'GET', url, true);
-
-    req.withCredentials = true;
-
-    if(options.headers) {
-      for(var header in options.headers) {
-        req.setRequestHeader(header, options.headers[header]);
-      }
-    }
-
-    req.send(options.body);
-    CD.suspend(options.maxSuspension, msg);
-  },
-
-  getImage: function(url, options, callback) {
-    var args = Array.prototype.slice.call(arguments);
-
-    callback = args.pop();
-    url = args[0];
-    options = args[1] || {};
-    var msg = "getImage: " + url;
-
-    var img = new Image();
-    img.onload = function() {
-      CD.capture(msg);
-      if(callback) { callback(img); }
-    };
-    img.onerror = function() {
-      CD.capture(msg);
-      callback(null);
-    };
-    img.src = url;
-    CD.suspend(options.maxSuspension, msg);
-  },
-
-  getImages: function(urls, options, callback, singleCallback) {
-    if(typeof(options) === "function") {
-      singleCallback = callback;
+  get(url, options = {}, callback) {
+    if (typeof options === 'function') {
       callback = options;
       options = {};
     }
 
-    options = options || {};
-
-    var imagesLeft = urls.length;
-    var imgs = [];
-    var calledIndex = -1;
-    var msg = "getImages";
-
-    for(var i = 0; i < urls.length; i++) {
-      (function(url, i){
-
-        var img = new Image();
-
-        img.onload = function() {
-          imagesLeft -= 1;
-          imgs[i] = img;
-          callbackNext();
-          finish();
-        };
-        img.onerror = function() {
-          imagesLeft -= 1;
-          CD.log("Image load error for " + url);
-          finish();
-        };
-
-        img.src = url;
-      })(urls[i], i);
-    }
-
-    CD.suspend(options.maxSuspension, msg);
-
-    function callbackNext() {
-      var next = calledIndex + 1;
-      if(imgs[next]) {
-        if(singleCallback) {
-          singleCallback(imgs[next]);
-        }
-        calledIndex = next;
-        callbackNext();
+    const deprecatedCallback = function() {
+      if (callback && typeof callback === 'function') {
+        CD.log(DEPRECATION_MSG);
+        return callback(...arguments);
       }
-    }
+    };
 
-    function finish() {
-      if(imagesLeft == 0) {
-        CD.capture(msg);
-        if(callback) {
-          callback(imgs);
+    const msg = `xhr: ${url}`;
+
+    return new Promise(function(resolve, reject) {
+      try {
+        const req = new XMLHttpRequest();
+
+        req.onerror = function() {
+          const error = `XHR error for ${url} - ${this.status}: ${this.statusText}`;
+
+          CD.resume(msg);
+
+          deprecatedCallback(null);
+
+          reject(new Error(error));
+        };
+
+        req.onload = function() {
+          const contentType = this.getResponseHeader('content-type');
+          const data = this.responseText;
+          const status = this.status;
+
+          if (status >= 400) {
+            return this.onerror();
+          }
+
+          CD.resume(msg);
+
+          deprecatedCallback(data, status, contentType);
+
+          resolve({
+            contentType,
+            data,
+            status
+          });
+        };
+
+        req.open(options.method || 'GET', url, true);
+
+        req.withCredentials = true;
+
+        if (options.headers) {
+          for (const header in options.headers) {
+            req.setRequestHeader(header, options.headers[header]);
+          }
         }
+
+        req.send(options.body);
+        CD.pause(options.maxSuspension, msg);
+      } catch (error) {
+        deprecatedCallback(null);
+
+        reject({
+          message: `Cropduster failed to create Promise: ${error}`,
+          error: error
+        });
       }
-    }
+    });
   },
 
-  waitForAsset: function(assetUrl) {
-    if(typeof(MICapture) == "undefined") {
-      CD.log("Wait for asset: " + assetUrl);
-    } else {
-      MICapture.waitForAsset(assetUrl);
+  getImage(url, options = {}, callback) {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
     }
+
+    const deprecatedCallback = function() {
+      if (callback && typeof callback === 'function') {
+        CD.log(DEPRECATION_MSG);
+
+        return callback(...arguments);
+      }
+    };
+
+    const msg = `getImage: ${url}`;
+
+    return new Promise(function(resolve, reject) {
+      const img = new Image();
+
+      img.onload = function() {
+        CD.resume(msg);
+
+        deprecatedCallback(img);
+
+        resolve(img);
+      };
+
+      img.onerror = function(event) {
+        CD.resume(msg);
+
+        deprecatedCallback(null);
+
+        reject(event);
+      };
+
+      CD.pause(options.maxSuspension, msg);
+      img.src = url;
+    });
   },
 
-  log: function(message) {
+  /**
+   * NOTE: getImages is intended to be used with promises. The `afterAll` callback is
+   * now deprecated, and the order of the afterEach and afterAll arguments has
+   * been reversed since previous versions of cropduster.
+   *
+   * To achieve the same effect, users should pass a single callback into the
+   * arguments for getImages, and then use a `.then` call to handle any actions
+   * after all images have finished loading.
+   *
+   * If any image fails to load, the Promise will reject.
+   */
+  getImages(urls, options = {}, afterEach, afterAll) {
+    const msg = 'getImages:';
+    CD.pause(options.maxSuspension, msg);
+
+    if (typeof options === 'function') {
+      afterAll = afterEach;
+      afterEach = options;
+      options = {};
+    }
+
+    const promises = urls.map(url => {
+      return this.getImage(url, options.maxSuspension).then(img => {
+        if (afterEach) {
+          afterEach(img);
+        }
+
+        return img;
+      });
+    });
+
+    return Promise.all(promises).then(
+      images => {
+        if (afterAll) {
+          CD.log(DEPRECATION_MSG);
+          afterAll(images);
+        }
+
+        CD.resume(msg);
+        return images;
+      },
+      _ => {
+        CD.resume(msg);
+        throw new Error('Not all images loaded successfully');
+      });
+  },
+
+  waitForAsset(assetUrl) {
+    CD.miCaptureFallback(
+      () => { MICapture.waitForAsset(assetUrl); },
+      () => { CD.log(`Wait for asset: ${assetUrl}`); }
+    );
+  },
+
+  log(message) {
     console.log(message);
   },
 
-  _hashForRequest: function(url, options) {
-    var str = url + JSON.stringify(options);
-    var hash = 0;
+  miCaptureFallback(ifCapturama, ifBrowser) {
+    const loadedInCapturama = !!window.MICapture && typeof window.MICapture === 'object';
+    return loadedInCapturama ? ifCapturama() : ifBrowser();
+  },
+
+  _hashForRequest(url, options) {
+    const str = `${url}${JSON.stringify(options)}`;
+
+    let hash = 0;
     if (str.length === 0) return hash;
-    for (var i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i) & 0xFFFFFFFF;
+
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash + str.charCodeAt(i)) & 0xffffffff;
     }
+
     return hash.toString();
   }
 };

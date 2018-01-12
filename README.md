@@ -21,13 +21,59 @@ import CD from 'cropduster';
 
 ## Legacy Installation
 
-If you are unable to use es6, you can find an es5 version at
+To use Cropduster directly in the browser, loaded from a script tag, you can
+find legacy versions at:
 
 http://projects.movableink.com/production/libs/cropduster.[version].js
+
+Going forward, browser-ready versions of the library are available at:
+
+http://projects.movableink.com/production/libs/cropduster.browser.[version].js
 
 Where you replace `[version]` with the version you want to use.
 
 ## API
+
+### Asynchronous actions
+Sometimes, Capturama needs to be explicitly told to hold off on finishing its
+screen capture in order for some asynchronous actions to fire and complete. This
+can be accomplished by calling `CD.pause` when an asynchronous action is about
+to start, and `CD.resume` when it has completed. `pause` takes a `maxSuspension`
+Number argument specifying the maximum amount of time in milliseconds that your
+asynchronous action is allowed to take, and both functions take an optional
+final argument of a String message explaining the suspension, purely used for
+debugging the Capturama log.
+
+If you are using the Cropduster API for common asynchronous actions like
+fetching a URL or an image with `CD.get` and `CD.getImage`, or if you are using
+Promises directly, you do not need to manually call pause and resume. These
+methods are used internally in the necessary places. However, if you are
+doing something unusual that requires work to be delayed manually, each call to
+`CD.pause` must have a corresponding call to `CD.resume`, or the request to
+Capturama will eventually time out.
+
+Example:
+```javascript
+const target = document.getElementById('text-box');
+const customerQuality = CD.param('mi_customer_rating');
+const tenSeconds = 10 * 1000;
+
+if (customerQuality === 'very-good') {
+  target.innerText = 'good customers get images quickly';
+} else if (customerQuality === 'very-bad') {
+  CD.pause(tenSeconds, 'making bad customers wait for their email to load...');
+
+  setTimeout(() => {
+    target.innerText = 'bad customers have to wait for their images';
+    CD.resume();
+  }, 1000);
+}
+```
+
+*NOTE:* Cropduster previously offered `CD.suspend` and `CD.capture` functions
+that achieved a similar goal. These functions have been replaced with `pause`
+and `resume`, to support a better synchronisation of state with Capturama, and
+to give a clearer sense of how these functions affect Capturama's workflow.
 
 ### Selecting elements
 
@@ -36,9 +82,18 @@ Where you replace `[version]` with the version you want to use.
 Example:
 
 ```javascript
-var elements = CD.$('div.items');
-for(var i = 0; i < elements.length; i++) {
-  var element = elements[i];
+const elements = CD.$('div.items');
+for (let i = 0; i < elements.length; i++) {
+  const element = elements[i];
+  element.style.display = 'none';
+}
+```
+
+or:
+
+```javascript
+const elements = CD.$('div.items');
+for (const element of elements) {
   element.style.display = 'none';
 }
 ```
@@ -51,7 +106,7 @@ Example:
 
 ```javascript
 // document.location is 'http://example.com/?fname=john
-var fname = CD.param('fname');
+const fname = CD.param('fname');
 console.log(fname); // logs 'john'
 ```
 
@@ -65,7 +120,8 @@ until the request completes. Note: the URL has to be CORS-accessible, see `CD.ge
 Example:
 
 ```javascript
-CD.get('http://cors-enabled-site.com/page', function(data, status) {
+CD.get('http://cors-enabled-site.com/page').then((response) => {
+  const { data, status, contentType } = response;
   CD.$('h1')[0].innerHTML = data.header;
 });
 ```
@@ -79,8 +135,8 @@ CD.get('http://cors-enabled-site.com/page', {
   headers: {
     'Accept': 'application/json'
   }
-}, function(data, status) {
-  CD.$('h1')[0].innerHTML = data.h1;
+}).then((response) => {
+  CD.$('h1')[0].innerHTML = response.data.h1;
 })
 ```
 
@@ -94,8 +150,8 @@ page.
 Example:
 
 ```javascript
-CD.getCORS('http://example.com/page', function(data, status) {
-  CD.$('h1')[0].innerHTML = data.header;
+CD.getCORS('http://example.com/page').then((response) => {
+  CD.$('h1')[0].innerHTML = response.data.header;
 });
 ```
 
@@ -161,6 +217,11 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
     npm test
 
 ## Changelog
+
+### 5.0.0
+  * Compiles the app with Webpack and Babel down to ES5 with sourcemaps.
+  * Returns Promises from CD.get, CD.getCORS, CD.getImage and CD.getImages
+  * NPM publishes the browser-ready script in dist/cropduster.browser.js
 
 ### 4.1.0
   * Add `withCredentials: true` to all `CD.get()` requests.

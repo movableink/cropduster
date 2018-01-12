@@ -3,18 +3,18 @@ module.exports = function(config) {
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
 
+    browsers: ['Chrome'],
+
     // frameworks to use
     frameworks: ['qunit'],
 
     // list of files / patterns to load in the browser
     files: [
-      'src/**/*.js',
       'tests/**/*.js'
     ],
 
     // preprocess matching files before serving them to the browser
     preprocessors: {
-      'src/*.js': ['webpack'],
       'tests/*.js': ['webpack', 'sourcemap']
     },
 
@@ -28,7 +28,7 @@ module.exports = function(config) {
             use: {
               loader: 'babel-loader',
               options: {
-                presets: ['env']
+                presets: ['es2015']
               }
             }
           }
@@ -60,9 +60,6 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
 
-    // start these browsers
-    // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits

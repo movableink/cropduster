@@ -1,8 +1,22 @@
 import CD from '../src/cropduster';
-import jQuery from 'jquery';
-import sinon from 'sinon';
+import { fakeServer, useFakeXMLHttpRequest, spy } from 'sinon';
 
-const container = jQuery("<div style='position: absolute; left: -5000px;'></div>").appendTo('body');
+const { module, test } = QUnit;
+const container = document.createElement('DIV');
+container.style = 'position: absolute; left: -5000px;';
+document.body.appendChild(container);
+
+module('cropduster tests', {
+  beforeEach() {
+    window.MICapture = {
+      pause: spy(),
+      resume: spy(),
+      cancel: spy(),
+      error: spy(),
+      waitForAsset: spy()
+    };
+  }
+});
 
 // Disable debugging output
 CD.log = function() {};
@@ -12,174 +26,176 @@ CD._searchString = function() {
   return 'foo=bar&baz%20test=quux%20value';
 };
 
-var imageSuccessStub = function() {
-  var self = this;
+const imageSuccessStub = function() {
+  const self = this;
   setTimeout(function() {
     self.onload();
   }, 1);
 };
 
-var imageFailureStub = function() {
-  var self = this;
+const imageFailureStub = function() {
+  const self = this;
   setTimeout(function() {
     self.onerror();
   }, 1);
 };
 
-QUnit.test("CD.$", function(assert) {
+test("CD.$", function(assert) {
   assert.equal(CD.$('body')[0], document.body, "finds elements" );
 });
 
-QUnit.test("CD.param when parameter not found", function(assert) {
+test("CD.param when parameter not found", function(assert) {
   assert.equal(CD.param('not_found'), null, "returns null");
 });
 
-QUnit.test("CD.param when parameter is found", function(assert) {
+test("CD.param when parameter is found", function(assert) {
   assert.equal(CD.param('foo'), 'bar', "returns value");
 });
 
-QUnit.test("CD.params returns all query params", function(assert) {
+test("CD.params returns all query params", function(assert) {
   assert.deepEqual(CD.params(), {'baz test': 'quux value', foo: 'bar'}, "returns the url params");
 });
 
-QUnit.test("CD.params with argument returns that query param", function(assert) {
+test("CD.params with argument returns that query param", function(assert) {
   assert.equal(CD.params('baz test'), 'quux value', "returns the url param");
 });
 
 // can't test CD.param returning query params from here, unfortunately...
 
-QUnit.test("CD.autofill", function(assert) {
-  container.html('');
-  var el = jQuery("<div id='autofill_foo'></div>");
+test("CD.autofill", function(assert) {
+  container.innerHTML = '';
+  const el = document.createElement('div');
+  el.id = 'autofill_foo';
   container.append(el);
 
   CD.autofill();
-  assert.equal(el.html(), 'bar', "auto-fills the query param into the element");
+  assert.equal(el.innerHTML, 'bar', "auto-fills the query param into the element");
 });
 
-QUnit.test("CD.setImageRedirect", function(assert) {
+test("CD.setImageRedirect", function(assert) {
   CD.setImageRedirect("http://example.com/foo.png");
 
-  assert.equal(jQuery("#mi-redirect-image").attr('href'), "http://example.com/foo.png",
-        "sets the image redirect");
+  const href = document.getElementById('mi-redirect-image').getAttribute('href');
+  assert.equal(href, "http://example.com/foo.png", "sets the image redirect");
 });
 
-QUnit.test("CD.setImageRedirect multiple times", function(assert) {
+test("CD.setImageRedirect multiple times", function(assert) {
   CD.setImageRedirect("http://example.com/foo.png");
   CD.setImageRedirect("http://example.com/bar.png");
 
-  assert.equal(jQuery("#mi-redirect-image").attr('href'), "http://example.com/bar.png",
-        "uses the last setImageRedirect url");
+  const href = document.getElementById('mi-redirect-image').getAttribute('href');
+  assert.equal(href, "http://example.com/bar.png", "uses the last setImageRedirect url");
 });
 
-QUnit.test("CD.setClickthrough", function(assert) {
+test("CD.setClickthrough", function(assert) {
+
   CD.setClickthrough("http://example.com/");
 
-  assert.equal(jQuery("#mi_dynamic_link").attr('href'), "http://example.com/",
+  const href = document.getElementById('mi_dynamic_link').getAttribute('href');
+  assert.equal(href, "http://example.com/",
         "sets the dynamic link");
 });
 
-QUnit.test("CD.setExtraData with no existing data", function(assert) {
+test("CD.setExtraData with no existing data", function(assert) {
   CD.setExtraData({foo: 'bar'});
 
-  assert.equal(jQuery("#mi-data").attr('data-mi-data'), '{"foo":"bar"}',
-        "sets the data in json");
+  const data = document.getElementById('mi-data').getAttribute('data-mi-data');
+  assert.equal(data, '{"foo":"bar"}', "sets the data in json");
 });
 
-QUnit.test("CD.setExtraData with existing data", function(assert) {
+test("CD.setExtraData with existing data", function(assert) {
   CD.setExtraData({foo: 'bar'});
   CD.setExtraData({foo: 'baz'});
   CD.setExtraData({my: 'data'});
 
-  assert.equal(jQuery("#mi-data").attr('data-mi-data'), '{"foo":"baz","my":"data"}',
+  const data = document.getElementById('mi-data').getAttribute('data-mi-data');
+  assert.equal(data, '{"foo":"baz","my":"data"}',
         "sets the data in json");
 });
 
-QUnit.test("CD.proxyUrl with http url", function(assert) {
-  var url = "http://google.com";
+test("CD.proxyUrl with http url", function(assert) {
+  const url = "http://google.com";
   assert.equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com/", "returns CORS url");
 });
 
-QUnit.test("CD.proxyUrl with https url", function(assert) {
-  var url = "https://google.com";
+test("CD.proxyUrl with https url", function(assert) {
+  const url = "https://google.com";
   assert.equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com:443/", "returns CORS url");
 });
 
-QUnit.test("CD.proxyUrl with port", function(assert) {
-  var url = "http://google.com:8080";
+test("CD.proxyUrl with port", function(assert) {
+  const url = "http://google.com:8080";
   assert.equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com:8080/", "returns CORS url");
 });
 
-QUnit.test("CD.suspend", function(assert) {
-  CD._reset(); // clean out previous test
-  CD.suspend();
-  assert.equal(CD._readyToCapture, false, "sets readyToCapture");
+test("CD.pause", function(assert) {
+  CD.pause();
+  assert.equal(MICapture.pause.calledOnce, true, "calls MICapture.pause");
 });
 
-QUnit.test("CD.capture", function(assert) {
-  CD._reset(); // clean out previous test
-  CD.capture();
-  assert.equal(CD._readyToCapture, true, "sets readyToCapture");
+test("CD.resume", function(assert) {
+  CD.resume();
+  assert.equal(MICapture.resume.calledOnce, true, "calls MICapture.resume");
 });
 
-QUnit.test("CD.getImage load success", function(assert) {
-  var done = assert.async();
+test("DEPRECATED - CD.getImage with a callback and successful load", function(assert) {
+  const done = assert.async();
   window.Image = imageSuccessStub;
-  var src = "http://example.com/foo.png";
+  const src = "http://example.com/foo.png";
   CD.getImage(src, function(img) {
     assert.equal(img.src, src, "called with src");
     done();
   });
 });
 
-QUnit.test("CD.getImage load failure", function(assert) {
-  var done = assert.async();
-  window.Image = imageFailureStub;
-  var src = "http://example.com/foo.png";
-  CD.getImage(src, function(img) {
-    assert.equal(img, null, "called with null");
+test("CD.getImage with a promise and successful load", function(assert) {
+  const done = assert.async();
+  window.Image = imageSuccessStub;
+  const src = "http://example.com/foo.png";
+  CD.getImage(src).then((img) => {
+    assert.equal(img.src, src, "called with src");
     done();
   });
 });
 
-QUnit.test("CD.getImages without callback", function(assert) {
-  assert.expect(0);
-
-  window.Image = imageSuccessStub;
-  var srcA = "http://example.com/foo.png";
-  var srcB = "http://example.com/bar.png";
-  CD.getImages([srcA, srcB]);
-});
-
-QUnit.test("CD.getImages with callback", function(assert) {
-  var done = assert.async();
-  window.Image = imageSuccessStub;
-  var srcA = "http://example.com/foo.png";
-  var srcB = "http://example.com/bar.png";
-  var cb = sinon.spy();
-  CD.getImages([srcA, srcB], cb);
-
-  setTimeout(function() {
-    assert.ok(cb.calledOnce);
-    assert.equal(cb.firstCall.args[0].length, 2);
+test("DEPRECATED - CD.getImage with a callback and a failing load", function(assert) {
+  const done = assert.async();
+  window.Image = imageFailureStub;
+  const src = "http://example.com/foo.png";
+  CD.getImage(src, function(img) {
+    assert.equal(img, null, "called with null");
     done();
-  }, 10);
+  }).catch(() => {});
 });
 
-QUnit.test("CD.waitForAsset", function(assert) {
+test("CD.getImage with a promise and a failing load", function(assert) {
+  const done = assert.async();
+  window.Image = imageFailureStub;
+  const src = "http://example.com/foo.png";
+  CD.getImage(src).then(
+    () => {
+      assert.ok(false, 'this function should never be called');
+      done();
+    },
+    (error) => {
+      assert.ok(true, 'the promise rejects if the image fails to load');
+      done();
+    }
+  );
+});
+
+test("CD.waitForAsset", function(assert) {
   assert.equal(CD.waitForAsset('http://example.com/foo.png'), undefined);
 });
 
-QUnit.test("CD.getImages with callback and single image callback", function(assert) {
-  var done = assert.async();
+test("DEPRECATED - CD.getImages with final callback and single image callback", function(assert) {
+  const done = assert.async();
   window.Image = imageSuccessStub;
-  var srcA = "http://example.com/foo.png";
-  var srcB = "http://example.com/bar.png";
-  var cb = sinon.spy();
-  var singleCb = sinon.spy();
-  CD.getImages([srcA, srcB], cb, singleCb);
-
-  setTimeout(function() {
+  const srcA = "http://example.com/foo.png";
+  const srcB = "http://example.com/bar.png";
+  const cb = spy();
+  const singleCb = spy();
+  CD.getImages([srcA, srcB], singleCb, cb).then(() => {
     assert.ok(cb.calledOnce, "callback is called only once");
     assert.equal(cb.firstCall.args[0].length, 2, "called with both images");
 
@@ -188,64 +204,138 @@ QUnit.test("CD.getImages with callback and single image callback", function(asse
     assert.equal(singleCb.secondCall.args[0].src, srcB, "last image called last");
 
     done();
-  }, 10);
+  });
 });
 
-QUnit.test("CD.get with response", function(assert) {
-  var server = sinon.fakeServer.create();
+test("CD.getImages with promises and a single callback", function(assert) {
+  const done = assert.async();
+  window.Image = imageSuccessStub;
+  const srcA = "http://example.com/foo.png";
+  const srcB = "http://example.com/bar.png";
+  const singleCb = spy();
+  CD.getImages([srcA, srcB], singleCb).then((images) => {
+    assert.ok(singleCb.calledTwice, "the single callback is called once for each resolved image");
+    assert.ok(true, "the promise is resolved if all images resolve");
+    assert.equal(images.length, 2, "called with both images");
+
+    assert.equal(singleCb.firstCall.args[0].src, srcA, "first image called first");
+    assert.equal(singleCb.secondCall.args[0].src, srcB, "last image called last");
+
+    done();
+  });
+});
+
+test("DEPRECATED - CD.get with callbacks and a successful response", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const done = assert.async();
+  const server = fakeServer.create();
 
   server.respondWith([200, {"Content-Type": "text/html"}, "response"]);
 
-  var spy = sinon.spy();
-
   CD.get("http://google.com", {
     headers: {
       'Accept': 'application/json'
     }
-  }, spy);
+  }, (data, status, contentType) => {
+    assert.ok(data === 'response', 'resolves with a response');
+    assert.ok(status === 200, 'resolves with a status');
+    assert.ok(contentType === 'text/html', 'resolves with a content type');
+
+    assert.ok(true, 'the promise resolves successfully');
+    done();
+  });
 
   server.respond();
-
-  assert.ok(spy.calledWith('response'), 'calls the callback with a response');
-
   server.restore();
 });
 
-QUnit.test("CD.get with a failing response", function(assert) {
-  var server = sinon.fakeServer.create();
+test("CD.get with promises and a successful response", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const done = assert.async();
+  const server = fakeServer.create();
 
-  var spy = sinon.spy();
+  server.respondWith([200, {"Content-Type": "text/html"}, "response"]);
 
   CD.get("http://google.com", {
     headers: {
       'Accept': 'application/json'
     }
-  }, spy);
+  }).then(({ data, status, contentType }) => {
+    assert.ok(data === 'response', 'resolves with a response');
+    assert.ok(status === 200, 'resolves with a status');
+    assert.ok(contentType === 'text/html', 'resolves with a content type');
+
+    assert.ok(true, 'the promise resolves successfully');
+    done();
+  });
+
+  server.respond();
+  server.restore();
+});
+
+test("DEPRECATED - CD.get with callbacks and a failing response", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const server = fakeServer.create();
+  const done = assert.async();
+
+  CD.get("http://google.com", {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }, (value) => {
+    assert.equal(value, null, 'the callback is called with null if the request fails');
+    done();
+  }).catch(() => {
+    // do nothing
+    // silence "Uncaught Promise rejection" error that gets thrown here
+  });
 
   server.requests[0].abort();
   server.requests[0].onerror();
 
-  assert.ok(spy.calledWith(null), 'calls the callback with a response');
+  server.restore();
+});
+
+test("CD.get with promises and a failing response", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const server = fakeServer.create();
+  const done = assert.async();
+
+  CD.get("http://google.com", {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }).then(
+    () => {
+      assert.ok(false, 'this should never be reached');
+      done();
+    },
+    () => {
+      assert.ok(true, 'the promise is rejected if the request fails');
+      done();
+    }
+  );
+
+  server.requests[0].abort();
+  server.requests[0].onerror();
 
   server.restore();
 });
 
 
-QUnit.test("CD.get", function(assert) {
-  var xhr = sinon.useFakeXMLHttpRequest();
-  var requests = this.requests = [];
+test("CD.get - request options", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const requests = this.requests = [];
   xhr.onCreate = function (xhr) {
     requests.push(xhr);
   };
-
-  var spy = sinon.spy();
 
   CD.get("http://google.com", {
     corsCacheTime: 5000,
     headers: {
       'Accept': 'application/json'
     }
-  }, spy);
+  });
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], null); // not automatically added
@@ -258,21 +348,19 @@ QUnit.test("CD.get", function(assert) {
   xhr.restore();
 });
 
-QUnit.test("CD.getCORS", function(assert) {
-  var xhr = sinon.useFakeXMLHttpRequest();
-  var requests = this.requests = [];
+test("CD.getCORS - request options", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const requests = this.requests = [];
   xhr.onCreate = function (xhr) {
     requests.push(xhr);
   };
-
-  var spy = sinon.spy();
 
   CD.getCORS("http://google.com", {
     corsCacheTime: 5000,
     headers: {
       'Accept': 'application/json'
     }
-  }, spy);
+  });
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
@@ -285,16 +373,14 @@ QUnit.test("CD.getCORS", function(assert) {
   xhr.restore();
 });
 
-QUnit.test("CD.getCORS without options", function(assert) {
-  var xhr = sinon.useFakeXMLHttpRequest();
-  var requests = this.requests = [];
+test("CD.getCORS without options", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const requests = this.requests = [];
   xhr.onCreate = function (xhr) {
     requests.push(xhr);
   };
 
-  var spy = sinon.spy();
-
-  CD.getCORS("http://google.com", spy);
+  CD.getCORS("http://google.com");
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 10);
@@ -304,14 +390,12 @@ QUnit.test("CD.getCORS without options", function(assert) {
   xhr.restore();
 });
 
-QUnit.test("CD.getCORS with POST", function(assert) {
-  var xhr = sinon.useFakeXMLHttpRequest();
-  var requests = this.requests = [];
+test("CD.getCORS with POST", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const requests = this.requests = [];
   xhr.onCreate = function (xhr) {
     requests.push(xhr);
   };
-
-  var spy = sinon.spy();
 
   CD.getCORS("http://google.com", {
     corsCacheTime: 5000,
@@ -320,7 +404,7 @@ QUnit.test("CD.getCORS with POST", function(assert) {
     headers: {
       'Accept': 'application/json'
     }
-  }, spy);
+  });
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
@@ -334,45 +418,44 @@ QUnit.test("CD.getCORS with POST", function(assert) {
   xhr.restore();
 });
 
-QUnit.test("concurrent calls", function(assert) {
-  CD._reset();
-
-  CD.suspend(1000); // 1 open call
-  CD.suspend(500); // 2 open calls
-  CD.capture(); // 1 open call
-  CD.suspend(1000); // 2 open calls
-
-  CD.capture(); // 1 open call
-  assert.equal(CD._readyToCapture, false, "waits for open calls to get to zero");
-  assert.equal(CD._openCalls, 1, "one open call");
-
-  CD.capture(); // 0 open calls
-  assert.equal(CD._readyToCapture, true, "sets readyToCapture");
-  assert.equal(CD._openCalls, 0, "zero open calls");
-});
-
-
-QUnit.test("_hashForRequest", function(assert) {
-  var hash = CD._hashForRequest("http://www.google.com", {"foo": "bar"});
+test("_hashForRequest", function(assert) {
+  let hash = CD._hashForRequest("http://www.google.com", {"foo": "bar"});
   assert.equal(hash, "387990350");
   hash = CD._hashForRequest("http://www.google.com", {"foo": "bar"});
   assert.equal(hash, "387990350");
-  var different = CD._hashForRequest("http://www.google.com", {"foo": "baz"});
+  const different = CD._hashForRequest("http://www.google.com", {"foo": "baz"});
   assert.equal(different, "387998038");
-  var another = CD._hashForRequest("http://www.example.com", {"foo": "baz"});
+  const another = CD._hashForRequest("http://www.example.com", {"foo": "baz"});
   assert.equal(another, "-164085129");
 });
 
-QUnit.test("CD.cancelRequest", function(assert) {
-  var callback = sinon.spy();
-  window.MICapture = { cancel: callback };
+test("CD.cancelRequest", function(assert) {
   CD.cancelRequest();
-  assert.ok(callback.calledOnce);
+  assert.ok(MICapture.cancel.calledOnce);
 });
 
-QUnit.test("CD.throwError", function(assert) {
-  var callback = sinon.spy();
-  window.MICapture = { error: callback };
+test("CD.throwError", function(assert) {
   CD.throwError();
-  assert.ok(callback.calledOnce);
+  assert.ok(MICapture.error.calledOnce);
+});
+
+test('CD.miCaptureFallback - with MICapture', function(assert) {
+  window.MICapture = {};
+
+  assert.expect(1);
+
+  CD.miCaptureFallback(
+    () => { assert.ok(true, 'the second callback is called if MICapture is defined as an object'); },
+    () => { assert.ok(false, 'this should not be called'); }
+  );
+});
+
+test('CD.miCaptureFallback - without MICapture', function(assert) {
+  window.MICapture = null;
+  assert.expect(1);
+
+  CD.miCaptureFallback(
+    () => { assert.ok(false, 'this should not be called'); },
+    () => { assert.ok(true, 'the second callback is called if MICapture is undefined'); }
+  );
 });

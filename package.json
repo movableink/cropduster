@@ -1,32 +1,33 @@
 {
   "name": "cropduster",
-  "version": "4.1.0",
+  "version": "5.0.0",
   "description": "Library for building web pages for use with Movable Ink Web Crops",
-  "main": "src/cropduster.js",
+  "main": "dist/cropduster.js",
   "directories": {
     "test": "tests"
   },
-  "dependencies": {},
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
-    "babel-preset-env": "^1.6.1",
-    "jquery": "^3.2.1",
+    "babel-cli": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
     "karma": "^1.7.1",
-    "karma-babel-preprocessor": "^7.0.0",
+    "karma-babel-preprocessor": "^6.0.1",
     "karma-chrome-launcher": "^2.2.0",
-    "karma-phantomjs-launcher": "^1.0.4",
     "karma-qunit": "^1.2.1",
     "karma-sinon": "^1.0.5",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.5",
-    "qunitjs": "^2.4.1",
+    "qunitjs": "^2.4.0",
     "sinon": "^4.1.1",
-    "webpack": "^3.8.1"
+    "uglify-js": "^3.0.18",
+    "webpack": "^3.10.0",
+    "webpack-dev-server": "^2.10.0"
   },
   "scripts": {
     "test": "node_modules/karma/bin/karma start",
-    "build": "sed 's/export default CD;//' src/cropduster.js | sed 's/const CD/window.CD/' > dist/cropduster.es5.js",
+    "build": "yarn run webpack",
+    "build:dev": "NODE_ENV=development yarn run webpack --watch",
     "prepublish": "npm run build"
   },
   "repository": {
