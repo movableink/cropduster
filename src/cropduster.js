@@ -234,7 +234,7 @@ const CD = {
 
         req.open(options.method || 'GET', url, true);
 
-        req.withCredentials = true;
+        req.withCredentials = !options.withoutCredentials;
 
         if (options.headers) {
           for (const header in options.headers) {
