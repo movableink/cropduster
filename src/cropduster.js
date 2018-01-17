@@ -7,7 +7,8 @@ const CD = {
     if (!doc) {
       doc = document;
     }
-    return Array.prototype.slice.call(doc.querySelectorAll(selector));
+
+    return [...doc.querySelectorAll(selector)];
   },
 
   _initParams() {
@@ -57,19 +58,17 @@ const CD = {
   },
 
   throwError(msg) {
-    if (typeof MICapture === 'undefined') {
-      CD.log('Capturama error: ' + msg);
-    } else {
-      MICapture.error(msg);
-    }
+    CD.miCaptureFallback(
+      () => { MICapture.error(msg); },
+      () => { CD.log('Capturama error: ' + msg) }
+    );
   },
 
   cancelRequest(msg) {
-    if (typeof MICapture === 'undefined') {
-      CD.log(`Request canceled: ${msg}`);
-    } else {
-      MICapture.cancel(msg);
-    }
+    CD.miCaptureFallback(
+      () => { MICapture.cancel(msg); },
+      () => { CD.log(`Request canceled: ${msg}`); }
+    );
   },
 
   setImageRedirect(imageUrl) {
@@ -144,33 +143,29 @@ const CD = {
     CD._readyToCapture = true;
   },
 
-  pause(maxSuspension, msg) {
-    msg = msg || 'manual suspension';
-
+  pause(maxSuspension, msg = 'manual suspension') {
     if (maxSuspension) {
       msg += `, will end in ${maxSuspension}ms`;
 
       setTimeout(() => {
-        MICapture.resume(msg);
+        CD.resume(msg);
       }, maxSuspension);
     }
 
-    if (typeof MICapture === 'undefined') {
-      CD.log(`paused: ${msg}`);
-    } else {
-      MICapture.pause(msg);
-    }
+    CD.miCaptureFallback(
+      () => { MICapture.pause(msg) },
+      () => { CD.log(`paused: ${msg}`) }
+    );
   },
 
   resume(msg) {
-    if (typeof MICapture === 'undefined') {
-      CD.log(`resuming paused capture: ${msg}`);
-    } else {
-      MICapture.resume(msg);
-    }
+    CD.miCaptureFallback(
+      () => { MICapture.resume(msg) },
+      () => { CD.log(`resuming paused capture: ${msg}`)}
+    );
   },
 
-  getCORS(url, options = {}, callback = () => {}) {
+  getCORS(url, options = {}, callback) {
     if (typeof options === 'function') {
       callback = options;
       options = {};
@@ -188,7 +183,7 @@ const CD = {
     return CD.get(url, options, callback);
   },
 
-  get(url, options = {}, callback = () => {}) {
+  get(url, options = {}, callback) {
     if (typeof options === 'function') {
       callback = options;
       options = {};
@@ -244,7 +239,7 @@ const CD = {
     );
   },
 
-  getImage(url, options = {}, callback = () => {}) {
+  getImage(url, options = {}, callback) {
     if (typeof options === 'function') {
       callback = options;
       options = {};
@@ -332,15 +327,19 @@ const CD = {
   },
 
   waitForAsset(assetUrl) {
-    if (typeof MICapture === 'undefined') {
-      CD.log(`Wait for asset: ${assetUrl}`);
-    } else {
-      MICapture.waitForAsset(assetUrl);
-    }
+    CD.miCaptureFallback(
+      () => { MICapture.waitForAsset(assetUrl); },
+      () => { CD.log(`Wait for asset: ${assetUrl}`); }
+    );
   },
 
   log(message) {
     console.log(message);
+  },
+
+  miCaptureFallback(ifCapturama, ifBrowser) {
+    const loadedInCapturama = !!window.MICapture && typeof window.MICapture === 'object';
+    return loadedInCapturama ? ifCapturama() : ifBrowser();
   },
 
   _hashForRequest(url, options) {

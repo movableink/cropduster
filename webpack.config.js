@@ -1,9 +1,13 @@
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const path = require('path');
+const webpack = require('webpack');
+const uglifier = new webpack.optimize.UglifyJsPlugin({ sourceMap: true });
+
+const inDev = process.env.NODE_ENV === 'development';
+const plugins = inDev ? [] : [uglifier];
 
 const defaultConfig = {
+  plugins,
   entry: './src/cropduster.js',
-  plugins: [new UglifyJsPlugin({ sourceMap: true })],
   devtool: 'source-map',
   module: {
     rules: [

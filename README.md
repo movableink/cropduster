@@ -34,6 +34,47 @@ Where you replace `[version]` with the version you want to use.
 
 ## API
 
+### Asynchronous actions
+Sometimes, Capturama needs to be explicitly told to hold off on finishing its
+screen capture in order for some asynchronous actions to fire and complete. This
+can be accomplished by calling `CD.pause` when an asynchronous action is about
+to start, and `CD.resume` when it has completed. `pause` takes a `maxSuspension`
+Number argument specifying the maximum amount of time in milliseconds that your
+asynchronous action is allowed to take, and both functions take an optional
+final argument of a String message explaining the suspension, purely used for
+debugging the Capturama log.
+
+If you are using the Cropduster API for common asynchronous actions like
+fetching a URL or an image with `CD.get` and `CD.getImage`, or if you are using
+Promises directly, you do not need to manually call pause and resume. These
+methods are used internally in the necessary places. However, if you are
+doing something unusual that requires work to be delayed manually, each call to
+`CD.pause` must have a corresponding call to `CD.resume`, or the request to
+Capturama will eventually time out.
+
+Example:
+```javascript
+const target = document.getElementById('text-box');
+const customerQuality = CD.param('mi_customer_rating');
+const tenSeconds = 10 * 1000;
+
+if (customerQuality === 'very-good') {
+  target.innerText = 'good customers get images quickly';
+} else if (customerQuality === 'very-bad') {
+  CD.pause(tenSeconds, 'making bad customers wait for their email to load...');
+
+  setTimeout(() => {
+    target.innerText = 'bad customers have to wait for their images';
+    CD.resume();
+  }, 1000);
+}
+```
+
+*NOTE:* Cropduster previously offered `CD.suspend` and `CD.capture` functions
+that achieved a similar goal. These functions have been replaced with `pause`
+and `resume`, to support a better synchronisation of state with Capturama, and
+to give a clearer sense of how these functions affect Capturama's workflow.
+
 ### Selecting elements
 
 `CD.$` is useful for getting an array of DOM elements via a CSS selector. It always returns an array.
@@ -94,7 +135,7 @@ CD.get('http://cors-enabled-site.com/page', {
   headers: {
     'Accept': 'application/json'
   }
-}).then((response) {
+}).then((response) => {
   CD.$('h1')[0].innerHTML = response.data.h1;
 })
 ```
@@ -109,7 +150,7 @@ page.
 Example:
 
 ```javascript
-CD.getCORS('http://example.com/page').then((response) {
+CD.getCORS('http://example.com/page').then((response) => {
   CD.$('h1')[0].innerHTML = response.data.header;
 });
 ```

@@ -1,11 +1,12 @@
 import CD from '../src/cropduster';
-import jQuery from 'jquery';
 import { spy } from 'sinon';
 import fetchMock from 'fetch-mock';
 
 const { module, test } = QUnit;
 
-const container = jQuery("<div style='position: absolute; left: -5000px;'></div>").appendTo('body');
+const container = document.createElement('DIV');
+container.style = 'position: absolute; left: -5000px;';
+document.body.appendChild(container);
 
 module('cropduster tests', {
   beforeEach() {
@@ -75,41 +76,44 @@ test("CD.params with argument returns that query param", function(assert) {
 // can't test CD.param returning query params from here, unfortunately...
 
 test("CD.autofill", function(assert) {
-  container.html('');
-  const el = jQuery("<div id='autofill_foo'></div>");
+  container.innerHTML = '';
+  const el = document.createElement('div');
+  el.id = 'autofill_foo';
   container.append(el);
 
   CD.autofill();
-  assert.equal(el.html(), 'bar', "auto-fills the query param into the element");
+  assert.equal(el.innerHTML, 'bar', "auto-fills the query param into the element");
 });
 
 test("CD.setImageRedirect", function(assert) {
   CD.setImageRedirect("http://example.com/foo.png");
 
-  assert.equal(jQuery("#mi-redirect-image").attr('href'), "http://example.com/foo.png",
-        "sets the image redirect");
+  const href = document.getElementById('mi-redirect-image').getAttribute('href');
+  assert.equal(href, "http://example.com/foo.png", "sets the image redirect");
 });
 
 test("CD.setImageRedirect multiple times", function(assert) {
   CD.setImageRedirect("http://example.com/foo.png");
   CD.setImageRedirect("http://example.com/bar.png");
 
-  assert.equal(jQuery("#mi-redirect-image").attr('href'), "http://example.com/bar.png",
-        "uses the last setImageRedirect url");
+  const href = document.getElementById('mi-redirect-image').getAttribute('href');
+  assert.equal(href, "http://example.com/bar.png", "uses the last setImageRedirect url");
 });
 
 test("CD.setClickthrough", function(assert) {
+
   CD.setClickthrough("http://example.com/");
 
-  assert.equal(jQuery("#mi_dynamic_link").attr('href'), "http://example.com/",
+  const href = document.getElementById('mi_dynamic_link').getAttribute('href');
+  assert.equal(href, "http://example.com/",
         "sets the dynamic link");
 });
 
 test("CD.setExtraData with no existing data", function(assert) {
   CD.setExtraData({foo: 'bar'});
 
-  assert.equal(jQuery("#mi-data").attr('data-mi-data'), '{"foo":"bar"}',
-        "sets the data in json");
+  const data = document.getElementById('mi-data').getAttribute('data-mi-data');
+  assert.equal(data, '{"foo":"bar"}', "sets the data in json");
 });
 
 test("CD.setExtraData with existing data", function(assert) {
@@ -117,7 +121,8 @@ test("CD.setExtraData with existing data", function(assert) {
   CD.setExtraData({foo: 'baz'});
   CD.setExtraData({my: 'data'});
 
-  assert.equal(jQuery("#mi-data").attr('data-mi-data'), '{"foo":"baz","my":"data"}',
+  const data = document.getElementById('mi-data').getAttribute('data-mi-data');
+  assert.equal(data, '{"foo":"baz","my":"data"}',
         "sets the data in json");
 });
 
@@ -279,6 +284,9 @@ test("DEPRECATED - CD.get with callbacks and a failing response", function(asser
   }, (value) => {
     assert.equal(value, null, 'the callback is called with null if the request fails');
     done();
+  }).catch(() => {
+    // do nothing
+    // silence "Uncaught Promise rejection" error that gets thrown here
   });
 });
 
@@ -392,4 +400,25 @@ test("CD.cancelRequest", function(assert) {
 test("CD.throwError", function(assert) {
   CD.throwError();
   assert.ok(MICapture.error.calledOnce);
+});
+
+test('CD.miCaptureFallback - with MICapture', function(assert) {
+  window.MICapture = {};
+
+  assert.expect(1);
+
+  CD.miCaptureFallback(
+    () => { assert.ok(true, 'the second callback is called if MICapture is defined as an object'); },
+    () => { assert.ok(false, 'this should not be called'); }
+  );
+});
+
+test('CD.miCaptureFallback - without MICapture', function(assert) {
+  window.MICapture = null;
+  assert.expect(1);
+
+  CD.miCaptureFallback(
+    () => { assert.ok(false, 'this should not be called'); },
+    () => { assert.ok(true, 'the second callback is called if MICapture is undefined'); }
+  );
 });
