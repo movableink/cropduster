@@ -218,7 +218,7 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
-### 5.0.1
+### 5.1.0
   * CD.get uses the `fetch` API instead of XMLHttpRequest
 
 ### 5.0.0
