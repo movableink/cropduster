@@ -197,45 +197,40 @@ const CD = {
       }
     };
 
-    const handleError = error => {
-      CD.log(`Error encountered in CD.get for ${url}: ${error}`);
-      CD.resume(msg);
-
-      deprecatedCallback(null);
-
-      if (!error instanceof Error) {
-        error = new Error(error);
-      }
-
-      throw error;
-    };
-
     CD.pause(options.maxSuspension || 0, msg);
 
     const requestOptions = CD._optionsForFetch(options);
 
-    return fetch(url, requestOptions).then(
-      response => {
-        if (!response.ok) {
-          handleError(response.statusText); // A non-200 range status was returned
-        }
+    return fetch(url, requestOptions).then(response => {
+      if (!response.ok) {
+        throw new Error(response.statusText); // A non-200 range status was returned
+      }
 
-        return response.text().then(data => {
-          const status = response.status;
-          const contentType = response.headers.get('Content-Type');
+      return response.text().then(data => {
+        const status = response.status;
+        const contentType = response.headers.get('Content-Type');
 
-          deprecatedCallback(data, status, contentType);
+        deprecatedCallback(data, status, contentType);
 
-          CD.resume(msg);
-
-          return {
-            data,
-            status,
-            contentType
-          };
-        }, handleError); // The response failed to parse with `.text()`
+        return {
+          data,
+          status,
+          contentType
+        };
+      });
+    }).then(
+      (response) => {
+        CD.resume(msg);
+        return response;
       },
-      handleError // A network or CORS error was hit
+      (error) => {
+        CD.log(`Error encountered in CD.get for ${url}: ${error}`);
+        CD.resume(msg);
+
+        deprecatedCallback(null);
+
+        throw error;
+      }
     );
   },
 
