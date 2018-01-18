@@ -218,6 +218,9 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 5.1.0
+  * Add `withoutCredentials` to `CD.get()` options to disable sending `withCredentials` in requests.
+
 ### 5.0.0
   * Compiles the app with Webpack and Babel down to ES5 with sourcemaps.
   * Returns Promises from CD.get, CD.getCORS, CD.getImage and CD.getImages
