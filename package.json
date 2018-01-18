@@ -24,7 +24,7 @@
     "webpack-dev-server": "^2.10.0"
   },
   "scripts": {
-    "test": "node_modules/karma/bin/karma start",
+    "test": "yarn run karma start",
     "build": "yarn run webpack",
     "build:dev": "NODE_ENV=development yarn run webpack --watch",
     "prepublish": "npm run build"
