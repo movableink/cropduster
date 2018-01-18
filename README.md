@@ -212,9 +212,8 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Testing
 
-    brew install phantomjs
-    npm install
-    npm test
+    yarn install
+    yarn run test
 
 ## Changelog
 
