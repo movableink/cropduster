@@ -331,12 +331,6 @@ test("CD.get - request options", function(assert) {
 });
 
 test("CD.get - withoutCredentials option", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
-  const requests = this.requests = [];
-  xhr.onCreate = function (xhr) {
-    requests.push(xhr);
-  };
-
   CD.get("http://google.com", {
     corsCacheTime: 5000,
     headers: {
@@ -352,9 +346,8 @@ test("CD.get - withoutCredentials option", function(assert) {
   assert.equal(lastRequest.headers.get('x-reverse-proxy-ttl'), null); // not automatically added
   assert.equal(lastRequest.headers.get('Accept'), 'application/json');
   assert.equal(lastRequest.method, 'GET');
-  assert.equal(lastRequest.credentials, 'include');
 
-  xhr.restore();
+  assert.notOk('credentials' in lastRequest, 'the request does not have a "credentials" option set');
 });
 
 test("CD.getCORS - request options", function(assert) {
