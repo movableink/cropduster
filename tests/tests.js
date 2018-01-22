@@ -1,13 +1,22 @@
 import CD from '../src/cropduster';
-import { fakeServer, useFakeXMLHttpRequest, spy } from 'sinon';
+import { spy } from 'sinon';
+import fetchMock from 'fetch-mock';
 
 const { module, test } = QUnit;
+
 const container = document.createElement('DIV');
 container.style = 'position: absolute; left: -5000px;';
 document.body.appendChild(container);
 
 module('cropduster tests', {
   beforeEach() {
+    this.fakeServer = fetchMock.mock('*', {
+      body: 'ok',
+      headers: {
+        'Content-Type': 'text/html'
+      }
+    });
+
     window.MICapture = {
       pause: spy(),
       resume: spy(),
@@ -15,6 +24,10 @@ module('cropduster tests', {
       error: spy(),
       waitForAsset: spy()
     };
+  },
+
+  afterEach() {
+    this.fakeServer.restore();
   }
 });
 
@@ -226,56 +239,42 @@ test("CD.getImages with promises and a single callback", function(assert) {
 });
 
 test("DEPRECATED - CD.get with callbacks and a successful response", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
   const done = assert.async();
-  const server = fakeServer.create();
 
-  server.respondWith([200, {"Content-Type": "text/html"}, "response"]);
-
-  CD.get("http://google.com", {
+  CD.get("http://callback.com", {
     headers: {
       'Accept': 'application/json'
     }
   }, (data, status, contentType) => {
-    assert.ok(data === 'response', 'resolves with a response');
+    assert.ok(data === 'ok', 'resolves with a response');
     assert.ok(status === 200, 'resolves with a status');
     assert.ok(contentType === 'text/html', 'resolves with a content type');
 
     assert.ok(true, 'the promise resolves successfully');
     done();
   });
-
-  server.respond();
-  server.restore();
 });
 
 test("CD.get with promises and a successful response", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
   const done = assert.async();
-  const server = fakeServer.create();
 
-  server.respondWith([200, {"Content-Type": "text/html"}, "response"]);
-
-  CD.get("http://google.com", {
+  CD.get("http://callback.com", {
     headers: {
       'Accept': 'application/json'
     }
   }).then(({ data, status, contentType }) => {
-    assert.ok(data === 'response', 'resolves with a response');
+    assert.ok(data === 'ok', 'resolves with a response');
     assert.ok(status === 200, 'resolves with a status');
     assert.ok(contentType === 'text/html', 'resolves with a content type');
 
     assert.ok(true, 'the promise resolves successfully');
     done();
   });
-
-  server.respond();
-  server.restore();
 });
 
 test("DEPRECATED - CD.get with callbacks and a failing response", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
-  const server = fakeServer.create();
+  this.fakeServer.restore();
+  this.fakeServer.mock('*', 500);
   const done = assert.async();
 
   CD.get("http://google.com", {
@@ -289,16 +288,11 @@ test("DEPRECATED - CD.get with callbacks and a failing response", function(asser
     // do nothing
     // silence "Uncaught Promise rejection" error that gets thrown here
   });
-
-  server.requests[0].abort();
-  server.requests[0].onerror();
-
-  server.restore();
 });
 
 test("CD.get with promises and a failing response", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
-  const server = fakeServer.create();
+  this.fakeServer.restore();
+  this.fakeServer.mock('*', 500);
   const done = assert.async();
 
   CD.get("http://google.com", {
@@ -315,21 +309,10 @@ test("CD.get with promises and a failing response", function(assert) {
       done();
     }
   );
-
-  server.requests[0].abort();
-  server.requests[0].onerror();
-
-  server.restore();
 });
 
 
 test("CD.get - request options", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
-  const requests = this.requests = [];
-  xhr.onCreate = function (xhr) {
-    requests.push(xhr);
-  };
-
   CD.get("http://google.com", {
     corsCacheTime: 5000,
     headers: {
@@ -337,24 +320,17 @@ test("CD.get - request options", function(assert) {
     }
   });
 
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], null); // not automatically added
-  assert.equal(requests[0].requestHeaders['Accept'], 'application/json');
-  assert.equal(requests[0].method, 'GET');
-  assert.equal(requests[0].async, true);
-  assert.equal(requests[0].withCredentials, true);
-  assert.equal(requests[0].url, "http://google.com");
+  const lastRequest = this.fakeServer.lastOptions();
 
-  xhr.restore();
+  assert.equal(this.fakeServer.calls.length, 1);
+  assert.equal(this.fakeServer.lastUrl(), "http://google.com");
+  assert.equal(lastRequest.headers.get('x-reverse-proxy-ttl'), null); // not automatically added
+  assert.equal(lastRequest.headers.get('Accept'), 'application/json');
+  assert.equal(lastRequest.method, 'GET');
+  assert.equal(lastRequest.credentials, 'include');
 });
 
 test("CD.get - withoutCredentials option", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
-  const requests = this.requests = [];
-  xhr.onCreate = function (xhr) {
-    requests.push(xhr);
-  };
-
   CD.get("http://google.com", {
     corsCacheTime: 5000,
     headers: {
@@ -363,24 +339,18 @@ test("CD.get - withoutCredentials option", function(assert) {
     withoutCredentials: true
   });
 
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], null); // not automatically added
-  assert.equal(requests[0].requestHeaders['Accept'], 'application/json');
-  assert.equal(requests[0].method, 'GET');
-  assert.equal(requests[0].async, true);
-  assert.equal(requests[0].withCredentials, false);
-  assert.equal(requests[0].url, "http://google.com");
+  const lastRequest = this.fakeServer.lastOptions();
 
-  xhr.restore();
+  assert.equal(this.fakeServer.calls.length, 1);
+  assert.equal(this.fakeServer.lastUrl(), "http://google.com");
+  assert.equal(lastRequest.headers.get('x-reverse-proxy-ttl'), null); // not automatically added
+  assert.equal(lastRequest.headers.get('Accept'), 'application/json');
+  assert.equal(lastRequest.method, 'GET');
+
+  assert.notOk('credentials' in lastRequest, 'the request does not have a "credentials" option set');
 });
 
 test("CD.getCORS - request options", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
-  const requests = this.requests = [];
-  xhr.onCreate = function (xhr) {
-    requests.push(xhr);
-  };
-
   CD.getCORS("http://google.com", {
     corsCacheTime: 5000,
     headers: {
@@ -388,41 +358,29 @@ test("CD.getCORS - request options", function(assert) {
     }
   });
 
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
-  assert.equal(requests[0].requestHeaders['x-mi-cbe'], '-2134781906');
-  assert.equal(requests[0].requestHeaders['Accept'], 'application/json');
-  assert.equal(requests[0].method, 'GET');
-  assert.equal(requests[0].async, true);
-  assert.equal(requests[0].url, "http://cors.movableink.com/google.com/");
+  const lastRequest = this.fakeServer.lastOptions();
 
-  xhr.restore();
+  assert.equal(this.fakeServer.calls.length, 1);
+  assert.equal(this.fakeServer.lastUrl(), "http://cors.movableink.com/google.com/");
+  assert.equal(lastRequest.headers.get('x-reverse-proxy-ttl'), 5); // not automatically added
+  assert.equal(lastRequest.headers.get('x-mi-cbe'), '-2134781906');
+  assert.equal(lastRequest.headers.get('Accept'), 'application/json');
+  assert.equal(lastRequest.method, 'GET');
+  assert.equal(lastRequest.credentials, 'include');
 });
 
 test("CD.getCORS without options", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
-  const requests = this.requests = [];
-  xhr.onCreate = function (xhr) {
-    requests.push(xhr);
-  };
-
   CD.getCORS("http://google.com");
 
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 10);
-  assert.equal(requests[0].requestHeaders['x-mi-cbe'], '2084411041');
-  assert.equal(requests[0].url, "http://cors.movableink.com/google.com/");
+  const lastRequest = this.fakeServer.lastOptions();
 
-  xhr.restore();
+  assert.equal(this.fakeServer.calls.length, 1);
+  assert.equal(this.fakeServer.lastUrl(), "http://cors.movableink.com/google.com/");
+  assert.equal(lastRequest.headers.get('x-reverse-proxy-ttl'), 10);
+  assert.equal(lastRequest.headers.get('x-mi-cbe'), '2084411041');
 });
 
 test("CD.getCORS with POST", function(assert) {
-  const xhr = useFakeXMLHttpRequest();
-  const requests = this.requests = [];
-  xhr.onCreate = function (xhr) {
-    requests.push(xhr);
-  };
-
   CD.getCORS("http://google.com", {
     corsCacheTime: 5000,
     method: 'POST',
@@ -432,16 +390,15 @@ test("CD.getCORS with POST", function(assert) {
     }
   });
 
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], 5);
-  assert.equal(requests[0].requestHeaders['Accept'], 'application/json');
-  assert.equal(requests[0].requestHeaders['x-mi-cbe'], '-1217831332');
-  assert.equal(requests[0].method, 'POST');
-  assert.equal(requests[0].async, true);
-  assert.equal(requests[0].requestBody, 'foobar');
-  assert.equal(requests[0].url, "http://cors.movableink.com/google.com/");
+  const lastRequest = this.fakeServer.lastOptions();
 
-  xhr.restore();
+  assert.equal(this.fakeServer.calls.length, 1);
+  assert.equal(this.fakeServer.lastUrl(), "http://cors.movableink.com/google.com/");
+  assert.equal(lastRequest.headers.get('x-reverse-proxy-ttl'), 5); // not automatically added
+  assert.equal(lastRequest.headers.get('x-mi-cbe'), '-1217831332');
+  assert.equal(lastRequest.headers.get('Accept'), 'application/json');
+  assert.equal(lastRequest.method, 'POST');
+  assert.equal(lastRequest.body, 'foobar');
 });
 
 test("_hashForRequest", function(assert) {
