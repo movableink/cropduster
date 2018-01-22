@@ -351,14 +351,19 @@ const CD = {
   },
 
   _optionsForFetch(options) {
-    return {
-      credentials: 'include',
+    const requestOptions = {
       redirect: 'follow',
       headers: new Headers(options.headers || {}),
       method: options.method || 'GET',
       body: options.body,
       mode: 'cors'
     };
+
+    if (!options.withoutCredentials) {
+      requestOptions.credentials = 'include';
+    }
+
+    return requestOptions;
   }
 };
 

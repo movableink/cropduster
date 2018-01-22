@@ -345,13 +345,14 @@ test("CD.get - withoutCredentials option", function(assert) {
     withoutCredentials: true
   });
 
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], null); // not automatically added
-  assert.equal(requests[0].requestHeaders['Accept'], 'application/json');
-  assert.equal(requests[0].method, 'GET');
-  assert.equal(requests[0].async, true);
-  assert.equal(requests[0].withCredentials, false);
-  assert.equal(requests[0].url, "http://google.com");
+  const lastRequest = this.fakeServer.lastOptions();
+
+  assert.equal(this.fakeServer.calls.length, 1);
+  assert.equal(this.fakeServer.lastUrl(), "http://google.com");
+  assert.equal(lastRequest.headers.get('x-reverse-proxy-ttl'), null); // not automatically added
+  assert.equal(lastRequest.headers.get('Accept'), 'application/json');
+  assert.equal(lastRequest.method, 'GET');
+  assert.equal(lastRequest.credentials, 'include');
 
   xhr.restore();
 });
