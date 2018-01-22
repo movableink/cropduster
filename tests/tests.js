@@ -330,6 +330,32 @@ test("CD.get - request options", function(assert) {
   assert.equal(lastRequest.credentials, 'include');
 });
 
+test("CD.get - withoutCredentials option", function(assert) {
+  const xhr = useFakeXMLHttpRequest();
+  const requests = this.requests = [];
+  xhr.onCreate = function (xhr) {
+    requests.push(xhr);
+  };
+
+  CD.get("http://google.com", {
+    corsCacheTime: 5000,
+    headers: {
+      'Accept': 'application/json'
+    },
+    withoutCredentials: true
+  });
+
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].requestHeaders['x-reverse-proxy-ttl'], null); // not automatically added
+  assert.equal(requests[0].requestHeaders['Accept'], 'application/json');
+  assert.equal(requests[0].method, 'GET');
+  assert.equal(requests[0].async, true);
+  assert.equal(requests[0].withCredentials, false);
+  assert.equal(requests[0].url, "http://google.com");
+
+  xhr.restore();
+});
+
 test("CD.getCORS - request options", function(assert) {
   CD.getCORS("http://google.com", {
     corsCacheTime: 5000,
