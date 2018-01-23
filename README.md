@@ -64,11 +64,19 @@ if (customerQuality === 'very-good') {
   CD.pause(tenSeconds, 'making bad customers wait for their email to load...');
 
   setTimeout(() => {
-    target.innerText = 'bad customers have to wait for their images';
     CD.resume();
+    target.innerText = 'bad customers have to wait for their images';
   }, 1000);
 }
 ```
+
+It is generally recommended to call CD.pause as the last thing before starting
+an asynchronous action, and CD.resume as the very first thing once that action
+has finished. If your asynchronous action completes successfully, but your
+callback runs some code before calling CD.resume again, then you run the risk of
+triggering a JavaScript error that stops execution of the current script. If
+CD.resume is not called after that first CD.pause, your image will eventually
+time out, as opposed to failing immediately.
 
 *NOTE:* Cropduster previously offered `CD.suspend` and `CD.capture` functions
 that achieved a similar goal. These functions have been replaced with `pause`
@@ -212,11 +220,27 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Testing
 
-    brew install phantomjs
-    npm install
-    npm test
+    yarn install
+    yarn run test
+
+## Publishing
+
+ 1. Open a pull request with your change; add a new entry to the changelog called "Latest" and list out your changes.
+ 2. Wait for your pull request to get approved, then merge it into master.
+ 3. On master, make a commit that bumps cropduster to the next version. The commit message should be in the form "Release version X.Y.Z" We adhere to semver. (format is `Major.Minor.Patch`) Choosing a version number:
+   * If your change introduces any breaking changes whatsoever, it needs a major version bump. These should definitely be listed in the changelog.
+   * If your change introduces new features but does not break any existing workflows, it should bump the minor version.
+   * If your change is fixes bugs or updates tests or something, you can just bump the patch version.
+ 4. Tag your release commit: `git tag [version]`. The version should be in the form `X.Y.Z` and _not_ have a `v` prepended. Push it to the server with `git push --tags`
+ 5. Publish to npm with `npm publish`. If you don't have permission, ask `mnutt`.
 
 ## Changelog
+
+### 5.2.0
+ * CD.get uses the `fetch` API instead of XMLHttpRequest
+
+### 5.1.0
+  * Add `withoutCredentials` to `CD.get()` options to disable sending `withCredentials` in requests.
 
 ### 5.0.0
   * Compiles the app with Webpack and Babel down to ES5 with sourcemaps.

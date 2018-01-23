@@ -189,6 +189,7 @@ const CD = {
       options = {};
     }
 
+    const msg = `xhr: ${url}`;
     const deprecatedCallback = function() {
       if (callback && typeof callback === 'function') {
         CD.log(DEPRECATION_MSG);
@@ -196,63 +197,41 @@ const CD = {
       }
     };
 
-    const msg = `xhr: ${url}`;
+    CD.pause(options.maxSuspension || 0, msg);
 
-    return new Promise(function(resolve, reject) {
-      try {
-        const req = new XMLHttpRequest();
+    const requestOptions = CD._optionsForFetch(options);
 
-        req.onerror = function() {
-          const error = `XHR error for ${url} - ${this.status}: ${this.statusText}`;
+    return fetch(url, requestOptions).then(response => {
+      if (!response.ok) {
+        throw new Error(response.statusText); // A non-200 range status was returned
+      }
 
-          CD.resume(msg);
+      return response.text().then(data => {
+        const status = response.status;
+        const contentType = response.headers.get('Content-Type');
 
-          deprecatedCallback(null);
+        deprecatedCallback(data, status, contentType);
 
-          reject(new Error(error));
+        return {
+          data,
+          status,
+          contentType
         };
+      });
+    }).then(
+      (response) => {
+        CD.resume(msg);
+        return response;
+      },
+      (error) => {
+        CD.log(`Error encountered in CD.get for ${url}: ${error}`);
+        CD.resume(msg);
 
-        req.onload = function() {
-          const contentType = this.getResponseHeader('content-type');
-          const data = this.responseText;
-          const status = this.status;
-
-          if (status >= 400) {
-            return this.onerror();
-          }
-
-          CD.resume(msg);
-
-          deprecatedCallback(data, status, contentType);
-
-          resolve({
-            contentType,
-            data,
-            status
-          });
-        };
-
-        req.open(options.method || 'GET', url, true);
-
-        req.withCredentials = true;
-
-        if (options.headers) {
-          for (const header in options.headers) {
-            req.setRequestHeader(header, options.headers[header]);
-          }
-        }
-
-        req.send(options.body);
-        CD.pause(options.maxSuspension, msg);
-      } catch (error) {
         deprecatedCallback(null);
 
-        reject({
-          message: `Cropduster failed to create Promise: ${error}`,
-          error: error
-        });
+        throw error;
       }
-    });
+    );
   },
 
   getImage(url, options = {}, callback) {
@@ -369,6 +348,22 @@ const CD = {
     }
 
     return hash.toString();
+  },
+
+  _optionsForFetch(options) {
+    const requestOptions = {
+      redirect: 'follow',
+      headers: new Headers(options.headers || {}),
+      method: options.method || 'GET',
+      body: options.body,
+      mode: 'cors'
+    };
+
+    if (!options.withoutCredentials) {
+      requestOptions.credentials = 'include';
+    }
+
+    return requestOptions;
   }
 };
 

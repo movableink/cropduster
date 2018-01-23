@@ -1,6 +1,6 @@
 {
   "name": "cropduster",
-  "version": "5.0.1",
+  "version": "5.2.0",
   "description": "Library for building web pages for use with Movable Ink Web Crops",
   "main": "src/cropduster.js",
   "directories": {
@@ -10,6 +10,7 @@
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-preset-env": "^1.6.1",
+    "fetch-mock": "^6.0.0-beta.7",
     "karma": "^1.7.1",
     "karma-babel-preprocessor": "^6.0.1",
     "karma-chrome-launcher": "^2.2.0",
