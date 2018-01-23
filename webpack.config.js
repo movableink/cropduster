@@ -1,9 +1,18 @@
 const path = require('path');
-const webpack = require('webpack');
-const uglifier = new webpack.optimize.UglifyJsPlugin({ sourceMap: true });
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const uglifier = new UglifyJsPlugin({
+  sourceMap: true,
+  uglifyOptions: {
+    // Necessary because of Safari 10 bug
+    // https://bugs.webkit.org/show_bug.cgi?id=171041
+    mangle: {
+      safari10: true
+    }
+  }
+});
 
-const inDev = process.env.NODE_ENV === 'development';
-const plugins = inDev ? [] : [uglifier];
+const isDevelopment = process.env.NODE_ENV === 'development';
+const plugins = isDevelopment ? [] : [uglifier];
 
 const defaultConfig = {
   plugins,
