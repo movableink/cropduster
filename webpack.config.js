@@ -5,7 +5,9 @@ const uglifier = new UglifyJsPlugin({
   uglifyOptions: {
     // Necessary because of Safari 10 bug
     // https://bugs.webkit.org/show_bug.cgi?id=171041
-    safari10: true
+    mangle: {
+      safari10: true
+    }
   }
 });
 
