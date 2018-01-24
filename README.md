@@ -236,6 +236,9 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 5.3.0
+ * Bundling change: our package.json `main` points to webpacked version, `module` points to es6 version. Prefer es6 version unless you know you need the webpacked version.
+
 ### 5.2.0
  * CD.get uses the `fetch` API instead of XMLHttpRequest
 
