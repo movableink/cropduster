@@ -1,4 +1,4 @@
-const isDevelopment = process.env.NODE_ENV === 'development';
+const watchMode = process.env.KARMA_WATCH === 'true';
 
 module.exports = function(config) {
   config.set({
@@ -57,11 +57,11 @@ module.exports = function(config) {
     logLevel: config.LOG_INFO,
 
     // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: isDevelopment,
+    autoWatch: watchMode,
 
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: !isDevelopment
+    singleRun: !watchMode
   });
 };
