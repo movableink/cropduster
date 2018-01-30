@@ -27,6 +27,7 @@
   },
   "scripts": {
     "test": "yarn run karma start",
+    "develop-test": "NODE_ENV=development yarn run karma start",
     "build": "yarn run webpack",
     "build:dev": "NODE_ENV=development yarn run webpack --watch",
     "prepublish": "npm run build"
