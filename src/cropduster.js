@@ -215,7 +215,8 @@ const CD = {
         return {
           data,
           status,
-          contentType
+          contentType,
+          response
         };
       });
     }).then(

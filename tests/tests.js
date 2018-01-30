@@ -272,6 +272,24 @@ test("CD.get with promises and a successful response", function(assert) {
   });
 });
 
+test("CD.get yields the response object to the resolved promise", function(assert) {
+  const done = assert.async();
+
+  this.fakeServer.restore();
+  this.fakeServer = fetchMock.mock('*', {
+    body: 'ok',
+    headers: {
+      'Content-Type': 'text/html',
+      'Every-Thing-Is': 'awesome'
+    }
+  });
+
+  CD.get("http://callback.com").then(({ response }) => {
+    assert.equal(response.headers.get('every-thing-is'), 'awesome', 'the response headers are available');
+    done();
+  });
+});
+
 test("DEPRECATED - CD.get with callbacks and a failing response", function(assert) {
   this.fakeServer.restore();
   this.fakeServer.mock('*', 500);
