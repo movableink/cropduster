@@ -227,12 +227,15 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
  1. Open a pull request with your change; add a new entry to the changelog called "Latest" and list out your changes.
  2. Wait for your pull request to get approved, then merge it into master.
- 3. On master, make a commit that bumps cropduster to the next version. The commit message should be in the form "Release version X.Y.Z" We adhere to semver. (format is `Major.Minor.Patch`) Choosing a version number:
+ 3. Run the release command for the type of change, following the prompts (this will tag and push to github and release to npm):
+   * If you do not have access to publish to npm, ask @mnutt.
    * If your change introduces any breaking changes whatsoever, it needs a major version bump. These should definitely be listed in the changelog.
+    - `yarn run release major`
    * If your change introduces new features but does not break any existing workflows, it should bump the minor version.
+    - `yarn run release minor`
    * If your change is fixes bugs or updates tests or something, you can just bump the patch version.
- 4. Tag your release commit: `git tag [version]`. The version should be in the form `X.Y.Z` and _not_ have a `v` prepended. Push it to the server with `git push --tags`
- 5. Publish to npm with `npm publish`. If you don't have permission, ask `mnutt`.
+    - `yarn run release` or `yarn run release patch`
+
 
 ## Changelog
 
