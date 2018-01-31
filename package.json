@@ -20,6 +20,7 @@
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.5",
     "qunitjs": "^2.4.0",
+    "release-it": "^6.1.1",
     "sinon": "^4.1.1",
     "uglifyjs-webpack-plugin": "^1.1.6",
     "webpack": "^3.10.0",
@@ -30,7 +31,8 @@
     "develop-test": "KARMA_WATCH=true yarn run karma start",
     "build": "yarn run webpack",
     "build:dev": "NODE_ENV=development yarn run webpack --watch",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "release": "release-it"
   },
   "repository": {
     "type": "git",
