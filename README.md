@@ -239,6 +239,9 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 5.4.0
+ * Expose `response` in resolved CD.get Promise
+
 ### 5.3.0
  * Bundling change: our package.json `main` points to webpacked version, `module` points to es6 version. Prefer es6 version unless you know you need the webpacked version.
 
