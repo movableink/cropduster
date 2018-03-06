@@ -272,6 +272,31 @@ test("CD.get with promises and a successful response", function(assert) {
   });
 });
 
+test("CD.get handles alternate charsets", function(assert) {
+  this.fakeServer.restore();
+  fetchMock.mock('*', {
+    body: 'ok',
+    headers: {
+      'Content-Type': 'text/html; charset=euc-jp'
+    }
+  });
+
+  const done = assert.async();
+
+  CD.get("http://callback.com", {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }).then(({ data, status, contentType }) => {
+    assert.ok(data === 'ok', 'resolves with a response');
+    assert.ok(status === 200, 'resolves with a status');
+    assert.ok(contentType === 'text/html; charset=euc-jp', 'resolves with a content type');
+
+    assert.ok(true, 'the promise resolves successfully');
+    done();
+  });
+});
+
 test("CD.get yields the response object to the resolved promise", function(assert) {
   const done = assert.async();
 

@@ -183,6 +183,20 @@ const CD = {
     return CD.get(url, options, callback);
   },
 
+  textForResponse(response) {
+    const type = response.headers.get('Content-Type');
+    const charsetRegex = /charset\=(.+)$/;
+    if (type && charsetRegex.test(type)) {
+      const [, encoding] = charsetRegex.exec(type);
+      return response.arrayBuffer().then((buffer) => {
+        const decoder = new TextDecoder(encoding); 
+        return decoder.decode(buffer);
+      });
+    } else {
+      return response.text();
+    }
+  },
+
   get(url, options = {}, callback) {
     if (typeof options === 'function') {
       callback = options;
@@ -206,7 +220,7 @@ const CD = {
         throw new Error(response.statusText); // A non-200 range status was returned
       }
 
-      return response.text().then(data => {
+      return this.textForResponse(response).then(data => {
         const status = response.status;
         const contentType = response.headers.get('Content-Type');
 
