@@ -239,6 +239,9 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 5.5.0
+ * Support non `utf-8` response encoding for `CD.get`
+
 ### 5.4.0
  * Expose `response` in resolved CD.get Promise
 
