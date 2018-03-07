@@ -275,9 +275,32 @@ test("CD.get with promises and a successful response", function(assert) {
 test("CD.get handles alternate charsets", function(assert) {
   this.fakeServer.restore();
   fetchMock.mock('*', {
+    // \xec is euc-jp for: 狸
+    body: '\xec',
+    headers: {
+      'Content-Type': `text/html; charset=euc-jp`
+    }
+  });
+
+  const done = assert.async();
+
+  CD.get("http://callback.com", {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }).then(({ data, status, contentType }) => {
+    assert.equal(data, '狸', 'resolves with a correctly decoded response');
+    assert.ok(contentType === 'text/html; charset=euc-jp', 'resolves with a content type');
+    done();
+  });
+});
+
+test("CD.get has sensible fallback for incorrect charsets", function(assert) {
+  this.fakeServer.restore();
+  fetchMock.mock('*', {
     body: 'ok',
     headers: {
-      'Content-Type': 'text/html; charset=euc-jp'
+      'Content-Type': 'text/html; charset=not-valid'
     }
   });
 
@@ -290,7 +313,7 @@ test("CD.get handles alternate charsets", function(assert) {
   }).then(({ data, status, contentType }) => {
     assert.ok(data === 'ok', 'resolves with a response');
     assert.ok(status === 200, 'resolves with a status');
-    assert.ok(contentType === 'text/html; charset=euc-jp', 'resolves with a content type');
+    assert.ok(contentType === 'text/html; charset=not-valid', 'resolves with a content type');
 
     assert.ok(true, 'the promise resolves successfully');
     done();
@@ -353,7 +376,6 @@ test("CD.get with promises and a failing response", function(assert) {
     }
   );
 });
-
 
 test("CD.get - request options", function(assert) {
   CD.get("http://google.com", {
@@ -485,3 +507,4 @@ test('CD.miCaptureFallback - without MICapture', function(assert) {
     () => { assert.ok(true, 'the second callback is called if MICapture is undefined'); }
   );
 });
+
