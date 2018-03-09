@@ -239,6 +239,9 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 6.0.0
+ * Remove use of `fetch` (major bump as exposure to `response` object is a breaking change)
+
 ### 5.5.0
  * Support non `utf-8` response encoding for `CD.get`
 
