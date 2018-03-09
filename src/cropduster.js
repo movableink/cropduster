@@ -183,30 +183,6 @@ const CD = {
     return CD.get(url, options, callback);
   },
 
-  _textForResponse(response, contentType) {
-    const charsetRegex = /charset\=(.+)$/;
-    const utf8 = /^utf\-8$/i;
-
-    return Promise.resolve().then(() => {
-      if (contentType && charsetRegex.test(contentType)) {
-        const [, encoding] = charsetRegex.exec(contentType);
-        if (!utf8.test(encoding)) {
-          return new TextDecoder(encoding);
-        }
-      }
-    }).then((decoder) => {
-      if (decoder) {
-        return response
-          .arrayBuffer()
-          .then((buffer) => decoder.decode(buffer));
-      } else {
-        return response.text();
-      }
-    }, () => {
-      return response.text();
-    });
-  },
-
   get(url, options = {}, callback) {
     if (typeof options === 'function') {
       callback = options;
@@ -223,41 +199,29 @@ const CD = {
 
     CD.pause(options.maxSuspension || 0, msg);
 
-    const requestOptions = CD._optionsForFetch(options);
+    return ajaxPromise(url, options).then(response => {
+      const contentType = response.getResponseHeader('content-type');
+      const { status, responseText: data } = response;
 
-    return fetch(url, requestOptions).then(response => {
-      if (!response.ok) {
-        throw new Error(response.statusText); // A non-200 range status was returned
-      }
+      deprecatedCallback(data, status, contentType);
 
-      const contentType = response.headers.get('Content-Type');
+      return {
+        data,
+        status,
+        contentType,
+        response
+      };
+    }).then(response => {
+      CD.resume(msg);
+      return response;
+    }, (error) => {
+      CD.log(`Error encountered in CD.get for ${url}: ${error}`);
+      CD.resume(msg);
 
-      return this._textForResponse(response, contentType).then(data => {
-        const status = response.status;
+      deprecatedCallback(null);
 
-        deprecatedCallback(data, status, contentType);
-
-        return {
-          data,
-          status,
-          contentType,
-          response
-        };
-      });
-    }).then(
-      (response) => {
-        CD.resume(msg);
-        return response;
-      },
-      (error) => {
-        CD.log(`Error encountered in CD.get for ${url}: ${error}`);
-        CD.resume(msg);
-
-        deprecatedCallback(null);
-
-        throw error;
-      }
-    );
+      throw error;
+    });
   },
 
   getImage(url, options = {}, callback) {
@@ -374,23 +338,36 @@ const CD = {
     }
 
     return hash.toString();
-  },
-
-  _optionsForFetch(options) {
-    const requestOptions = {
-      redirect: 'follow',
-      headers: new Headers(options.headers || {}),
-      method: options.method || 'GET',
-      body: options.body,
-      mode: 'cors'
-    };
-
-    if (!options.withoutCredentials) {
-      requestOptions.credentials = 'include';
-    }
-
-    return requestOptions;
   }
 };
+
+function ajaxPromise(url, options) {
+  return new Promise((resolve, reject) => {
+    const req = new XMLHttpRequest();
+
+    req.onerror = function() {
+      reject(this.status);
+    };
+
+    req.onload = function() {
+      resolve(this);
+    };
+
+    req.open(options.method || 'GET', url, true);
+
+    if (!options.withoutCredentials) {
+      req.withCredentials = true;
+    }
+
+    if (options.headers) {
+      const { headers } = options;
+      Object.keys(headers).forEach((header) => {
+        req.setRequestHeader(header, headers[header]);
+      });
+    }
+
+    req.send(options.body);
+  });
+}
 
 export default CD;
