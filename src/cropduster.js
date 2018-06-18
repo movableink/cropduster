@@ -1,4 +1,5 @@
-const DEPRECATION_MSG = 'callbacks are deprecated in cropduster, prefer using promises for asynchronous operations';
+const DEPRECATION_MSG =
+  'callbacks are deprecated in cropduster, prefer using promises for asynchronous operations';
 
 const CD = {
   CORS_PROXY_SERVER: 'http://cors.movableink.com',
@@ -57,17 +58,27 @@ const CD = {
     }
   },
 
-  throwError(msg) {
+  throwError(message) {
     CD.miCaptureFallback(
-      () => { MICapture.error(msg); },
-      () => { CD.log('Capturama error: ' + msg) }
+      () => {
+        MICapture.error(message);
+      },
+      () => {
+        CD.log('Capturama error: ' + message);
+        CD.notify('error', { message });
+      }
     );
   },
 
-  cancelRequest(msg) {
+  cancelRequest(message) {
     CD.miCaptureFallback(
-      () => { MICapture.cancel(msg); },
-      () => { CD.log(`Request canceled: ${msg}`); }
+      () => {
+        MICapture.cancel(message);
+      },
+      () => {
+        CD.log(`Request canceled: ${message}`);
+        CD.notify('canceled', { message });
+      }
     );
   },
 
@@ -79,6 +90,7 @@ const CD = {
     a.style.display = 'none';
 
     document.body.appendChild(a);
+    CD.notify('imageRedirect', { url: imageUrl });
 
     return a;
   },
@@ -91,6 +103,7 @@ const CD = {
     a.style.display = 'none';
 
     document.body.appendChild(a);
+    CD.notify('clickthrough', { url });
 
     return a;
   },
@@ -117,6 +130,7 @@ const CD = {
 
     el.setAttribute('data-mi-data', JSON.stringify(existingData));
     document.body.appendChild(el);
+    CD.notify('extraData', { data: existingData });
 
     return el;
   },
@@ -143,25 +157,35 @@ const CD = {
     CD._readyToCapture = true;
   },
 
-  pause(maxSuspension, msg = 'manual suspension') {
+  pause(maxSuspension, message = 'manual suspension') {
     if (maxSuspension) {
-      msg += `, will end in ${maxSuspension}ms`;
+      message += `, will end in ${maxSuspension}ms`;
 
       setTimeout(() => {
-        CD.resume(msg);
+        CD.resume(message);
       }, maxSuspension);
     }
 
     CD.miCaptureFallback(
-      () => { MICapture.pause(msg) },
-      () => { CD.log(`paused: ${msg}`) }
+      () => {
+        MICapture.pause(message);
+      },
+      () => {
+        CD.log(`paused: ${message}`);
+        CD.notify('pause', { message });
+      }
     );
   },
 
-  resume(msg) {
+  resume(message) {
     CD.miCaptureFallback(
-      () => { MICapture.resume(msg) },
-      () => { CD.log(`resuming paused capture: ${msg}`)}
+      () => {
+        MICapture.resume(message);
+      },
+      () => {
+        CD.log(`resuming paused capture: ${message}`);
+        CD.notify('resume', { message });
+      }
     );
   },
 
@@ -199,29 +223,34 @@ const CD = {
 
     CD.pause(options.maxSuspension || 0, msg);
 
-    return ajaxPromise(url, options).then(response => {
-      const contentType = response.getResponseHeader('content-type');
-      const { status, responseText: data } = response;
+    return ajaxPromise(url, options)
+      .then(response => {
+        const contentType = response.getResponseHeader('content-type');
+        const { status, responseText: data } = response;
 
-      deprecatedCallback(data, status, contentType);
+        deprecatedCallback(data, status, contentType);
 
-      return {
-        data,
-        status,
-        contentType,
-        response
-      };
-    }).then(response => {
-      CD.resume(msg);
-      return response;
-    }, (error) => {
-      CD.log(`Error encountered in CD.get for ${url}: ${error}`);
-      CD.resume(msg);
+        return {
+          data,
+          status,
+          contentType,
+          response
+        };
+      })
+      .then(
+        response => {
+          CD.resume(msg);
+          return response;
+        },
+        error => {
+          CD.log(`Error encountered in CD.get for ${url}: ${error}`);
+          CD.resume(msg);
 
-      deprecatedCallback(null);
+          deprecatedCallback(null);
 
-      throw error;
-    });
+          throw error;
+        }
+      );
   },
 
   getImage(url, options = {}, callback) {
@@ -308,18 +337,28 @@ const CD = {
       _ => {
         CD.resume(msg);
         throw new Error('Not all images loaded successfully');
-      });
+      }
+    );
   },
 
   waitForAsset(assetUrl) {
     CD.miCaptureFallback(
-      () => { MICapture.waitForAsset(assetUrl); },
-      () => { CD.log(`Wait for asset: ${assetUrl}`); }
+      () => {
+        MICapture.waitForAsset(assetUrl);
+      },
+      () => {
+        CD.log(`Wait for asset: ${assetUrl}`);
+        CD.notify('waitForAsset', { url: assetUrl });
+      }
     );
   },
 
   log(message) {
     console.log(message);
+  },
+
+  notify(type, attrs = {}) {
+    window.parent && window.parent.postMessage({ type, attrs }, '*');
   },
 
   miCaptureFallback(ifCapturama, ifBrowser) {
@@ -361,7 +400,7 @@ function ajaxPromise(url, options) {
 
     if (options.headers) {
       const { headers } = options;
-      Object.keys(headers).forEach((header) => {
+      Object.keys(headers).forEach(header => {
         req.setRequestHeader(header, headers[header]);
       });
     }
