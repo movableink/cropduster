@@ -1,4 +1,4 @@
-const DEPRECATION_MSG =
+const DEPRECATION_MESSAGE =
   'callbacks are deprecated in cropduster, prefer using promises for asynchronous operations';
 
 const CD = {
@@ -213,15 +213,15 @@ const CD = {
       options = {};
     }
 
-    const msg = `xhr: ${url}`;
+    const message = `xhr: ${url}`;
     const deprecatedCallback = function() {
       if (callback && typeof callback === 'function') {
-        CD.log(DEPRECATION_MSG);
+        CD.log(DEPRECATION_MESSAGE);
         return callback(...arguments);
       }
     };
 
-    CD.pause(options.maxSuspension || 0, msg);
+    CD.pause(options.maxSuspension || 0, message);
 
     return ajaxPromise(url, options)
       .then(response => {
@@ -239,12 +239,12 @@ const CD = {
       })
       .then(
         response => {
-          CD.resume(msg);
+          CD.resume(message);
           return response;
         },
         error => {
           CD.log(`Error encountered in CD.get for ${url}: ${error}`);
-          CD.resume(msg);
+          CD.resume(message);
 
           deprecatedCallback(null);
 
@@ -261,19 +261,19 @@ const CD = {
 
     const deprecatedCallback = function() {
       if (callback && typeof callback === 'function') {
-        CD.log(DEPRECATION_MSG);
+        CD.log(DEPRECATION_MESSAGE);
 
         return callback(...arguments);
       }
     };
 
-    const msg = `getImage: ${url}`;
+    const message = `getImage: ${url}`;
 
     return new Promise(function(resolve, reject) {
       const img = new Image();
 
       img.onload = function() {
-        CD.resume(msg);
+        CD.resume(message);
 
         deprecatedCallback(img);
 
@@ -281,14 +281,14 @@ const CD = {
       };
 
       img.onerror = function(event) {
-        CD.resume(msg);
+        CD.resume(message);
 
         deprecatedCallback(null);
 
         reject(event);
       };
 
-      CD.pause(options.maxSuspension, msg);
+      CD.pause(options.maxSuspension, message);
       img.src = url;
     });
   },
@@ -305,8 +305,8 @@ const CD = {
    * If any image fails to load, the Promise will reject.
    */
   getImages(urls, options = {}, afterEach, afterAll) {
-    const msg = 'getImages:';
-    CD.pause(options.maxSuspension, msg);
+    const message = 'getImages:';
+    CD.pause(options.maxSuspension, message);
 
     if (typeof options === 'function') {
       afterAll = afterEach;
@@ -327,15 +327,15 @@ const CD = {
     return Promise.all(promises).then(
       images => {
         if (afterAll) {
-          CD.log(DEPRECATION_MSG);
+          CD.log(DEPRECATION_MESSAGE);
           afterAll(images);
         }
 
-        CD.resume(msg);
+        CD.resume(message);
         return images;
       },
       _ => {
-        CD.resume(msg);
+        CD.resume(message);
         throw new Error('Not all images loaded successfully');
       }
     );
