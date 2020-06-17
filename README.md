@@ -239,6 +239,10 @@ console.log('If user clicks on the web crop, they will go to http://example.com'
 
 ## Changelog
 
+### 7.0.0
+
+ * Skip proxying requests for internal domains that support CORS
+
 ### 6.0.0
  * Remove use of `fetch` (major bump as exposure to `response` object is a breaking change)
 
