@@ -408,6 +408,40 @@ test("CD.getCORS with POST", function(assert) {
   });
 });
 
+test("CD.getCORS to sorcerer.movableink-templates.com", function(assert) {
+  const done = assert.async();
+
+  // the request goes directly to sorcerer which supports CORS
+  this.fakeServer.get('http://sorcerer.movableink-templates.com', ({ requestHeaders }) => {
+    assert.equal(requestHeaders['x-reverse-proxy-ttl'], 5);
+    assert.equal(requestHeaders['x-mi-cbe'], '1503910540');
+    done();
+    return [200, {}, ''];
+  });
+
+  CD.getCORS("http://sorcerer.movableink-templates.com", {
+    corsCacheTime: 5000,
+    headers: { 'Accept': 'application/json' }
+  });
+});
+
+test("CD.getCORS to profiles.movableink.com", function(assert) {
+  const done = assert.async();
+
+  // the request goes directly to sherlock which supports CORS
+  this.fakeServer.get('http://profiles.movableink.com', ({ requestHeaders }) => {
+    assert.equal(requestHeaders['x-reverse-proxy-ttl'], 5);
+    assert.equal(requestHeaders['x-mi-cbe'], '750998333');
+    done();
+    return [200, {}, ''];
+  });
+
+  CD.getCORS("http://profiles.movableink.com", {
+    corsCacheTime: 5000,
+    headers: { 'Accept': 'application/json' }
+  });
+});
+
 test("_hashForRequest", function(assert) {
   let hash = CD._hashForRequest("http://www.google.com", {"foo": "bar"});
   assert.equal(hash, "387990350");

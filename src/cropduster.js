@@ -172,7 +172,11 @@ const CD = {
     }
 
     options.corsCacheTime = options.corsCacheTime || 10 * 1000;
-    if (!/cors.movableink.com/.test(url)) {
+    if (
+      !/cors.movableink.com/.test(url) &&
+      !/profiles.movableink.com/.test(url) &&
+      !/sorcerer.movableink-templates.com/.test(url)
+    ) {
       url = CD.proxyUrl(url);
     }
 
