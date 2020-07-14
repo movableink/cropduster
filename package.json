@@ -20,7 +20,7 @@
     "karma-webpack": "^2.0.5",
     "pretender": "^2.0.0",
     "qunitjs": "^2.4.0",
-    "release-it": "^6.1.1",
+    "release-it": "^13.6.5",
     "rollup": "^0.59.2",
     "rollup-plugin-babel": "^3.0.4",
     "sinon": "^4.1.1",
