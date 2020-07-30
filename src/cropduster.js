@@ -1,4 +1,5 @@
-const DEPRECATION_MSG = 'callbacks are deprecated in cropduster, prefer using promises for asynchronous operations';
+const DEPRECATION_MESSAGE =
+  'callbacks are deprecated in cropduster, prefer using promises for asynchronous operations';
 
 const CD = {
   CORS_PROXY_SERVER: 'https://cors.movableink.com',
@@ -57,17 +58,27 @@ const CD = {
     }
   },
 
-  throwError(msg) {
+  throwError(message) {
     CD.miCaptureFallback(
-      () => { MICapture.error(msg); },
-      () => { CD.log('Capturama error: ' + msg) }
+      () => {
+        MICapture.error(message);
+      },
+      () => {
+        CD.log('Capturama error: ' + message);
+        CD.notify('error', { message });
+      }
     );
   },
 
-  cancelRequest(msg) {
+  cancelRequest(message) {
     CD.miCaptureFallback(
-      () => { MICapture.cancel(msg); },
-      () => { CD.log(`Request canceled: ${msg}`); }
+      () => {
+        MICapture.cancel(message);
+      },
+      () => {
+        CD.log(`Request canceled: ${message}`);
+        CD.notify('canceled', { message });
+      }
     );
   },
 
@@ -79,6 +90,7 @@ const CD = {
     a.style.display = 'none';
 
     document.body.appendChild(a);
+    CD.notify('imageRedirect', { url: imageUrl });
 
     return a;
   },
@@ -91,6 +103,7 @@ const CD = {
     a.style.display = 'none';
 
     document.body.appendChild(a);
+    CD.notify('clickthrough', { url });
 
     return a;
   },
@@ -117,6 +130,7 @@ const CD = {
 
     el.setAttribute('data-mi-data', JSON.stringify(existingData));
     document.body.appendChild(el);
+    CD.notify('extraData', { data: existingData });
 
     return el;
   },
@@ -143,25 +157,35 @@ const CD = {
     CD._readyToCapture = true;
   },
 
-  pause(maxSuspension, msg = 'manual suspension') {
+  pause(maxSuspension, message = 'manual suspension') {
     if (maxSuspension) {
-      msg += `, will end in ${maxSuspension}ms`;
+      message += `, will end in ${maxSuspension}ms`;
 
       setTimeout(() => {
-        CD.resume(msg);
+        CD.resume(message);
       }, maxSuspension);
     }
 
     CD.miCaptureFallback(
-      () => { MICapture.pause(msg) },
-      () => { CD.log(`paused: ${msg}`) }
+      () => {
+        MICapture.pause(message);
+      },
+      () => {
+        CD.log(`paused: ${message}`);
+        CD.notify('pause', { message });
+      }
     );
   },
 
-  resume(msg) {
+  resume(message) {
     CD.miCaptureFallback(
-      () => { MICapture.resume(msg) },
-      () => { CD.log(`resuming paused capture: ${msg}`)}
+      () => {
+        MICapture.resume(message);
+      },
+      () => {
+        CD.log(`resuming paused capture: ${message}`);
+        CD.notify('resume', { message });
+      }
     );
   },
 
@@ -193,39 +217,44 @@ const CD = {
       options = {};
     }
 
-    const msg = `xhr: ${url}`;
+    const message = `xhr: ${url}`;
     const deprecatedCallback = function() {
       if (callback && typeof callback === 'function') {
-        CD.log(DEPRECATION_MSG);
+        CD.log(DEPRECATION_MESSAGE);
         return callback(...arguments);
       }
     };
 
-    CD.pause(options.maxSuspension || 0, msg);
+    CD.pause(options.maxSuspension || 0, message);
 
-    return ajaxPromise(url, options).then(response => {
-      const contentType = response.getResponseHeader('content-type');
-      const { status, responseText: data } = response;
+    return ajaxPromise(url, options)
+      .then(response => {
+        const contentType = response.getResponseHeader('content-type');
+        const { status, responseText: data } = response;
 
-      deprecatedCallback(data, status, contentType);
+        deprecatedCallback(data, status, contentType);
 
-      return {
-        data,
-        status,
-        contentType,
-        response
-      };
-    }).then(response => {
-      CD.resume(msg);
-      return response;
-    }, (error) => {
-      CD.log(`Error encountered in CD.get for ${url}: ${error}`);
-      CD.resume(msg);
+        return {
+          data,
+          status,
+          contentType,
+          response
+        };
+      })
+      .then(
+        response => {
+          CD.resume(message);
+          return response;
+        },
+        error => {
+          CD.log(`Error encountered in CD.get for ${url}: ${error}`);
+          CD.resume(message);
 
-      deprecatedCallback(null);
+          deprecatedCallback(null);
 
-      throw error;
-    });
+          throw error;
+        }
+      );
   },
 
   getImage(url, options = {}, callback) {
@@ -236,19 +265,19 @@ const CD = {
 
     const deprecatedCallback = function() {
       if (callback && typeof callback === 'function') {
-        CD.log(DEPRECATION_MSG);
+        CD.log(DEPRECATION_MESSAGE);
 
         return callback(...arguments);
       }
     };
 
-    const msg = `getImage: ${url}`;
+    const message = `getImage: ${url}`;
 
     return new Promise(function(resolve, reject) {
       const img = new Image();
 
       img.onload = function() {
-        CD.resume(msg);
+        CD.resume(message);
 
         deprecatedCallback(img);
 
@@ -256,14 +285,14 @@ const CD = {
       };
 
       img.onerror = function(event) {
-        CD.resume(msg);
+        CD.resume(message);
 
         deprecatedCallback(null);
 
         reject(event);
       };
 
-      CD.pause(options.maxSuspension, msg);
+      CD.pause(options.maxSuspension, message);
       img.src = url;
     });
   },
@@ -280,8 +309,8 @@ const CD = {
    * If any image fails to load, the Promise will reject.
    */
   getImages(urls, options = {}, afterEach, afterAll) {
-    const msg = 'getImages:';
-    CD.pause(options.maxSuspension, msg);
+    const message = 'getImages:';
+    CD.pause(options.maxSuspension, message);
 
     if (typeof options === 'function') {
       afterAll = afterEach;
@@ -302,28 +331,38 @@ const CD = {
     return Promise.all(promises).then(
       images => {
         if (afterAll) {
-          CD.log(DEPRECATION_MSG);
+          CD.log(DEPRECATION_MESSAGE);
           afterAll(images);
         }
 
-        CD.resume(msg);
+        CD.resume(message);
         return images;
       },
       _ => {
-        CD.resume(msg);
+        CD.resume(message);
         throw new Error('Not all images loaded successfully');
-      });
+      }
+    );
   },
 
   waitForAsset(assetUrl) {
     CD.miCaptureFallback(
-      () => { MICapture.waitForAsset(assetUrl); },
-      () => { CD.log(`Wait for asset: ${assetUrl}`); }
+      () => {
+        MICapture.waitForAsset(assetUrl);
+      },
+      () => {
+        CD.log(`Wait for asset: ${assetUrl}`);
+        CD.notify('waitForAsset', { url: assetUrl });
+      }
     );
   },
 
   log(message) {
     console.log(message);
+  },
+
+  notify(type, attrs = {}) {
+    window.parent && window.parent.postMessage({ type, attrs }, '*');
   },
 
   miCaptureFallback(ifCapturama, ifBrowser) {
@@ -365,7 +404,7 @@ function ajaxPromise(url, options) {
 
     if (options.headers) {
       const { headers } = options;
-      Object.keys(headers).forEach((header) => {
+      Object.keys(headers).forEach(header => {
         req.setRequestHeader(header, headers[header]);
       });
     }
