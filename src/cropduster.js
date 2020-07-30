@@ -1,7 +1,7 @@
 const DEPRECATION_MSG = 'callbacks are deprecated in cropduster, prefer using promises for asynchronous operations';
 
 const CD = {
-  CORS_PROXY_SERVER: 'http://cors.movableink.com',
+  CORS_PROXY_SERVER: 'https://cors.movableink.com',
 
   $(selector, doc) {
     if (!doc) {

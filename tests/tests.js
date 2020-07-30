@@ -125,17 +125,17 @@ test("CD.setExtraData with existing data", function(assert) {
 
 test("CD.proxyUrl with http url", function(assert) {
   const url = "http://google.com";
-  assert.equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com/", "returns CORS url");
+  assert.equal(CD.proxyUrl(url), "https://cors.movableink.com/google.com/", "returns CORS url");
 });
 
 test("CD.proxyUrl with https url", function(assert) {
   const url = "https://google.com";
-  assert.equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com:443/", "returns CORS url");
+  assert.equal(CD.proxyUrl(url), "https://cors.movableink.com/google.com:443/", "returns CORS url");
 });
 
 test("CD.proxyUrl with port", function(assert) {
   const url = "http://google.com:8080";
-  assert.equal(CD.proxyUrl(url), "http://cors.movableink.com/google.com:8080/", "returns CORS url");
+  assert.equal(CD.proxyUrl(url), "https://cors.movableink.com/google.com:8080/", "returns CORS url");
 });
 
 test("CD.pause", function(assert) {
@@ -359,9 +359,9 @@ test("CD.get - withoutCredentials option", function(assert) {
 test("CD.getCORS - request options", function(assert) {
   const done = assert.async();
 
-  this.fakeServer.get('http://cors.movableink.com/google.com/', ({ requestHeaders }) => {
+  this.fakeServer.get('https://cors.movableink.com/google.com/', ({ requestHeaders }) => {
     assert.equal(requestHeaders['x-reverse-proxy-ttl'], 5);
-    assert.equal(requestHeaders['x-mi-cbe'], '-2134781906');
+    assert.equal(requestHeaders['x-mi-cbe'], '-445402223');
     done();
     return [200, {}, ''];
   });
@@ -377,9 +377,9 @@ test("CD.getCORS - request options", function(assert) {
 test("CD.getCORS without options", function(assert) {
   const done = assert.async();
 
-  this.fakeServer.get('http://cors.movableink.com/google.com/', ({ requestHeaders }) => {
+  this.fakeServer.get('https://cors.movableink.com/google.com/', ({ requestHeaders }) => {
     assert.equal(requestHeaders['x-reverse-proxy-ttl'], 10);
-    assert.equal(requestHeaders['x-mi-cbe'], '2084411041');
+    assert.equal(requestHeaders['x-mi-cbe'], '1156018116');
     done();
     return [200, {}, ''];
   });
@@ -390,9 +390,9 @@ test("CD.getCORS without options", function(assert) {
 test("CD.getCORS with POST", function(assert) {
   const done = assert.async();
 
-  this.fakeServer.post('http://cors.movableink.com/google.com/', ({ requestHeaders, requestBody }) => {
+  this.fakeServer.post('https://cors.movableink.com/google.com/', ({ requestHeaders, requestBody }) => {
     assert.equal(requestHeaders['x-reverse-proxy-ttl'], 5);
-    assert.equal(requestHeaders['x-mi-cbe'], '-1217831332');
+    assert.equal(requestHeaders['x-mi-cbe'], '238876095');
     assert.equal(requestBody, 'foobar');
     done();
     return [200, {}, ''];
