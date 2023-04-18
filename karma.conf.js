@@ -17,26 +17,13 @@ module.exports = function(config) {
 
     // preprocess matching files before serving them to the browser
     preprocessors: {
-      'tests/*.js': ['webpack', 'sourcemap']
+      'tests/*.js': ['esbuild']
     },
 
-    webpack: {
-      devtool: 'inline-source-map',
-      module: {
-        rules: [
-          {
-            test: /\.js$/,
-            exclude: /node_modules/,
-            use: {
-              loader: 'babel-loader'
-            }
-          }
-        ]
+    esbuild: {
+      define: {
+        global: "window"
       }
-    },
-
-    webpackMiddleware: {
-      noInfo: true
     },
 
     // list of files to exclude
@@ -58,7 +45,6 @@ module.exports = function(config) {
 
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: watchMode,
-
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
