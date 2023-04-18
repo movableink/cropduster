@@ -26,11 +26,9 @@ find legacy versions at:
 
 http://projects.movableink.com/production/libs/cropduster.[version].js
 
-Going forward, browser-ready versions of the library are available at:
-
-http://projects.movableink.com/production/libs/cropduster.browser.[version].js
-
 Where you replace `[version]` with the version you want to use.
+
+Browser-only cropduster versions are no longer being published for new versions.
 
 ## API
 
